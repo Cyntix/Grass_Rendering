@@ -1,0 +1,7 @@
+newmtl lambert2SG
+illum 4
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd textures/stars2.tga
+Ni 1.00

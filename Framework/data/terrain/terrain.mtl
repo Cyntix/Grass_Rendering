@@ -1,8 +1,7 @@
-# Blender MTL File: 'None'
-# Material Count: 1
-newmtl 
-Ka 0.000000 0.000000 0.000000
-Kd 0.8 0.8 0.8
+newmtl lambert2SG
 illum 4
-
-
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd textures/grassTerrain.tga
+Ni 1.00

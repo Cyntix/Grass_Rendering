@@ -51,9 +51,12 @@ init()
 	daysPerMiliSecond = 1 / 180.0;
 	totalDaysElapsed = 0;
 
+	//FOR THE MOMENT, THE LIGHT HAS NO INCIDENCE IN GSLS
+	m_light.origin() = Vector3(0.0, 0.0, 0.0);
 	m_recSunlightInt = 1.0;
 	
 	m_SkyScale = 5000.0;
+	m_TerrainScale = 5000.0;
 
 }
 
@@ -100,12 +103,7 @@ load_mesh(const std::string& filenameObj, MeshType type)
 			if(!m_Terrain.hasNormals())
 				m_Terrain.calculateVertexNormals();
 			
-			//Exercise 4.2: Scale the sun using the attribute m_sunScale
 			m_Terrain.scaleObject(Vector3(m_TerrainScale, m_TerrainScale, m_TerrainScale));
-			
-			//Exercise 4.4: Set the light position to the center of the sun
-			m_light.origin() = Vector3(0, 0, 0);
-
 			m_showTextureTerrain = m_Terrain.hasUvTextureCoord();
 			break;
 		default:
@@ -226,29 +224,27 @@ draw_scene(DrawMode _draw_mode)
 	m_Sky.getMaterial(0).m_diffuseTexture.bind();
 	m_meshShaderTexture.setIntUniform("texture", m_Sky.getMaterial(0).m_diffuseTexture.getLayer());
 	draw_object(m_meshShaderTexture, m_Sky);
-	glEnable(GL_DEPTH_TEST);
-	
+	glEnable(GL_DEPTH_TEST);	
+
 	m_meshShaderTexture.unbind();
 	
 	//-------------------------------
 	
 	m_meshShaderDiffuse.bind();
 
-	//terrain
-	m_meshShaderTexture.setMatrix4x4Uniform("modelworld", m_Terrain.getTransformation() );
-	m_Terrain.getMaterial(0).m_diffuseTexture.bind();
-	m_meshShaderTexture.setIntUniform("texture", m_Terrain.getMaterial(0).m_diffuseTexture.getLayer());
-	draw_object(m_meshShaderTexture, m_Terrain);
-	
-	//Exercise 4.4: Calculate the light position in camera coordinates
-	Vector3 lightPosInCamera = m_camera.getTransformation().Inverse()*m_light.origin();
-	
 	m_meshShaderDiffuse.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
 	m_meshShaderDiffuse.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
 	m_meshShaderDiffuse.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
-	m_meshShaderDiffuse.setVector3Uniform("lightposition", lightPosInCamera.x, lightPosInCamera.y, lightPosInCamera.z );
 	m_meshShaderDiffuse.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
 
+	//terrain
+	m_meshShaderDiffuse.setMatrix4x4Uniform("modelworld", m_Terrain.getTransformation() );
+	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
+	m_meshShaderDiffuse.setVector3Uniform("diffuseColor", m_Terrain.getMaterial().m_diffuseColor.x, m_Terrain.getMaterial().m_diffuseColor.y, m_Terrain.getMaterial().m_diffuseColor.z );
+	draw_object(m_meshShaderDiffuse, m_Terrain, m_showTextureTerrain);
+
+
+	m_meshShaderDiffuse.unbind();
 }
 
 

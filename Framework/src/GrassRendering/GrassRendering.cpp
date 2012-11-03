@@ -42,7 +42,8 @@ init()
 	// load mesh shader
 	m_meshShaderDiffuse.create("diffuse.vs", "diffuse.fs");
 	m_meshShaderTexture.create("tex.vs","tex.fs");
-	
+	m_meshShaderStencil.create("stencil.vs", "stencil.fs");
+
 	m_showTextureSky = false;
 	
 	currentTime = 0.0;
@@ -140,6 +141,12 @@ keyboard(int key, int x, int y)
 		case 't':
 			m_showTextureSky = !m_showTextureSky;
 			if(!m_Sky.hasUvTextureCoord()) m_showTextureSky = false;
+			
+			m_showTextureTerrain = !m_showTextureTerrain;
+			if(!m_Terrain.hasUvTextureCoord()) m_showTextureTerrain = false;
+
+			m_showTextureGrass = !m_showTextureGrass;
+			if(!m_Grass.hasUvTextureCoord()) m_showTextureGrass = false;
 			break;
 		case ' ':
 			if(isWatchOn)
@@ -226,7 +233,7 @@ draw_scene(DrawMode _draw_mode)
 	m_meshShaderTexture.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
 	
 	
-	//stars
+	//sky
 	glDisable(GL_DEPTH_TEST);
 	m_Sky.setIdentity();
 	m_Sky.scaleObject(Vector3(m_SkyScale, m_SkyScale, m_SkyScale));
@@ -249,16 +256,22 @@ draw_scene(DrawMode _draw_mode)
 	m_meshShaderDiffuse.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
 
 	//terrain
-	m_meshShaderDiffuse.setMatrix4x4Uniform("modelworld", m_Terrain.getTransformation() );
 	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
 	draw_object(m_meshShaderDiffuse, m_Terrain, m_showTextureTerrain);
 
-	//grass
-	m_meshShaderDiffuse.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation() );
-	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
-	draw_object(m_meshShaderDiffuse, m_Grass, m_showTextureGrass);
-
 	m_meshShaderDiffuse.unbind();
+
+	m_meshShaderStencil.bind();
+	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
+	m_meshShaderStencil.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
+	m_meshShaderStencil.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
+	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
+
+	//grass
+	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
+	draw_object(m_meshShaderStencil, m_Grass, m_showTextureGrass);
+
+	m_meshShaderStencil.unbind();
 }
 
 
@@ -289,7 +302,8 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh)
 void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh, bool showTexture)
 {
 	sh.setMatrix4x4Uniform("modelworld", mesh.getTransformation() );
-			
+	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", mesh.getTransformation().Inverse().Transpose());
+
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	if(showTexture)
@@ -308,16 +322,20 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh, bool showTexture)
 							 mesh.getMaterial(i).m_diffuseColor.y, 
 							 mesh.getMaterial(i).m_diffuseColor.z );
 		sh.setFloatUniform("specularExp", mesh.getMaterial(i).m_specularExp);
-		cout << mesh.getMaterial(i).hasDiffuseTexture();
 		if(showTexture && mesh.getMaterial(i).hasDiffuseTexture())
 		{
 			mesh.getMaterial(i).m_diffuseTexture.bind();
 			sh.setIntUniform("texture", mesh.getMaterial(i).m_diffuseTexture.getLayer());
+			if(mesh.getMaterial(i).hasAlphaTexture()){
+				mesh.getMaterial(i).m_alphaTexture.bind();
+				sh.setIntUniform("alpha", mesh.getMaterial(i).m_alphaTexture.getLayer());
+			}
 		}
 		glDrawElements( GL_TRIANGLES, mesh.getNumberOfFaces(i)*3, GL_UNSIGNED_INT, mesh.getVertexIndicesPointer(i) );
 		if(showTexture && mesh.getMaterial(i).hasDiffuseTexture())
 		{
 			mesh.getMaterial(i).m_diffuseTexture.unbind();
+			mesh.getMaterial(i).m_alphaTexture.unbind();
 		}
 	}
 			

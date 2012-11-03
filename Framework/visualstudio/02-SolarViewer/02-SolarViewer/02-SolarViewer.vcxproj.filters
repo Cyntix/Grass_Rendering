@@ -124,5 +124,11 @@
     <None Include="..\..\..\src\GrassRendering\tex.vs">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="..\..\..\src\GrassRendering\stencil.fs">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\..\src\GrassRendering\stencil.vs">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

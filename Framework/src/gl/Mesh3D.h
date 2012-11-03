@@ -37,11 +37,14 @@ public:
     bool hasDiffuseTexture() const { return m_diffuseTexture.getID() != 0; }
     
     bool hasBumpTexture() const { return m_bumpTexture.getID() != 0; }
+
+	bool hasAlphaTexture() const { return m_alphaTexture.getID() != 0; }
     
     Vector3 m_diffuseColor;
     double m_specularExp;
     Texture m_diffuseTexture;
     Texture m_bumpTexture;
+	Texture m_alphaTexture;
 };
 
 class Mesh3D : public Object3D

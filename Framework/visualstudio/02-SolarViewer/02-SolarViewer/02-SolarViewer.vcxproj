@@ -124,6 +124,8 @@
     <None Include="..\..\..\src\GrassRendering\diffuse.vs" />
     <None Include="..\..\..\src\GrassRendering\phong.fs" />
     <None Include="..\..\..\src\GrassRendering\phong.vs" />
+    <None Include="..\..\..\src\GrassRendering\stencil.fs" />
+    <None Include="..\..\..\src\GrassRendering\stencil.vs" />
     <None Include="..\..\..\src\GrassRendering\tex.fs" />
     <None Include="..\..\..\src\GrassRendering\tex.vs" />
   </ItemGroup>

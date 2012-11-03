@@ -1,4 +1,4 @@
-﻿La génération a démarré 03.11.2012 11:34:28.
+﻿La génération a démarré 03.11.2012 17:07:36.
      1>Projet "C:\Users\Raphaël\Documents\EPFL\Introduction_to_Computer_Graphics\Projets\Grass_Rendering\Framework\visualstudio\02-SolarViewer\02-SolarViewer\02-SolarViewer.vcxproj" sur le nœud 2 (Build cible(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Users\Raphaël\Documents\EPFL\Introduction_to_Computer_Graphics\Projets\Grass_Rendering\Framework\visualstudio\02-SolarViewer\\..\libs" /Zi /nologo /W3 /WX- /O2 /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _USE_MATH_DEFINES /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\..\src\GrassRendering\GrassRendering.cpp
@@ -19,4 +19,4 @@
 
 La génération a réussi.
 
-Temps écoulé 00:00:05.40
+Temps écoulé 00:00:06.25

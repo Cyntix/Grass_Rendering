@@ -76,6 +76,7 @@ protected:
 	Shader m_meshShaderDiffuse;
 	Shader m_meshShaderPhong;
 	Shader m_meshShaderTexture;
+	Shader m_meshShaderStencil;
 	
 	bool m_showTextureSky;
 	bool m_showTextureTerrain;

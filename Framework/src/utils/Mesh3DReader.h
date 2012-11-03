@@ -137,6 +137,18 @@ private:
 				_materialsManager.materials.back()->m_bumpTexture.create(texturePath);
 				_materialsManager.materials.back()->m_bumpTexture.setLayer(1);
 			}
+			else if(word == "map_alpha")
+			{
+				std::string texturePath;
+				lineStream >> texturePath;
+				#ifdef WIN32
+					texturePath = _filenameMTL.substr(0, _filenameMTL.find_last_of("\\")+1) + texturePath;
+				#else
+					texturePath = _filenameMTL.substr(0, _filenameMTL.find_last_of("/")+1) + texturePath;
+				#endif
+				_materialsManager.materials.back()->m_alphaTexture.create(texturePath);
+				_materialsManager.materials.back()->m_alphaTexture.setLayer(2);
+			}
 		}
 		myfile.close();
 		return true;

@@ -57,7 +57,7 @@ init()
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-
+	m_GrassScale = 1000.0;
 }
 
 
@@ -105,6 +105,17 @@ load_mesh(const std::string& filenameObj, MeshType type)
 			
 			m_Terrain.scaleObject(Vector3(m_TerrainScale, m_TerrainScale, m_TerrainScale));
 			m_showTextureTerrain = m_Terrain.hasUvTextureCoord();
+			break;
+		case GRASS:
+			// load mesh from obj
+			Mesh3DReader::read( filenameObj, m_Grass);
+			
+			// calculate normals
+			if(!m_Grass.hasNormals())
+				m_Grass.calculateVertexNormals();
+			
+			m_Grass.scaleObject(Vector3(m_GrassScale, m_GrassScale, m_GrassScale));
+			m_showTextureGrass = m_Grass.hasUvTextureCoord();
 			break;
 		default:
 			break;
@@ -240,9 +251,12 @@ draw_scene(DrawMode _draw_mode)
 	//terrain
 	m_meshShaderDiffuse.setMatrix4x4Uniform("modelworld", m_Terrain.getTransformation() );
 	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
-	m_meshShaderDiffuse.setVector3Uniform("diffuseColor", m_Terrain.getMaterial().m_diffuseColor.x, m_Terrain.getMaterial().m_diffuseColor.y, m_Terrain.getMaterial().m_diffuseColor.z );
 	draw_object(m_meshShaderDiffuse, m_Terrain, m_showTextureTerrain);
 
+	//grass
+	m_meshShaderDiffuse.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation() );
+	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
+	draw_object(m_meshShaderDiffuse, m_Grass, m_showTextureGrass);
 
 	m_meshShaderDiffuse.unbind();
 }
@@ -260,10 +274,8 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh)
 	glNormalPointer( GL_DOUBLE, 0, mesh.getNormalPointer() );
 	glTexCoordPointer( 2, GL_DOUBLE, 0, mesh.getUvTextureCoordPointer() );
 	
-	cout<<"number of parts: " << mesh.getNumberOfParts();
 	for(unsigned int i = 0; i < mesh.getNumberOfParts(); i++)
 	{
-		cout<<"number of faces: " <<i << ": " <<mesh.getNumberOfFaces(i);
 		glDrawElements( GL_TRIANGLES, mesh.getNumberOfFaces(i)*3, GL_UNSIGNED_INT, mesh.getVertexIndicesPointer(i) );
 	}
 	cout<<"\n";
@@ -296,6 +308,7 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh, bool showTexture)
 							 mesh.getMaterial(i).m_diffuseColor.y, 
 							 mesh.getMaterial(i).m_diffuseColor.z );
 		sh.setFloatUniform("specularExp", mesh.getMaterial(i).m_specularExp);
+		cout << mesh.getMaterial(i).hasDiffuseTexture();
 		if(showTexture && mesh.getMaterial(i).hasDiffuseTexture())
 		{
 			mesh.getMaterial(i).m_diffuseTexture.bind();

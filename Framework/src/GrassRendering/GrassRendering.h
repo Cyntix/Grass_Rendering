@@ -35,6 +35,7 @@ enum MeshType
 {
 	SKY = 0,
 	TERRAIN,
+	GRASS,
 };
 
 class GrassRendering : public TrackballViewer
@@ -65,6 +66,7 @@ protected:
 	// mesh objects
 	Mesh3D m_Sky;
 	Mesh3D m_Terrain;
+	Mesh3D m_Grass;
 	
 	// directional light
 	Light3D m_light;
@@ -77,10 +79,12 @@ protected:
 	
 	bool m_showTextureSky;
 	bool m_showTextureTerrain;
+	bool m_showTextureGrass;
 	
 	//scaling factors
 	float m_SkyScale;
 	float m_TerrainScale;
+	float m_GrassScale;
 	
 	//translation factors
 	

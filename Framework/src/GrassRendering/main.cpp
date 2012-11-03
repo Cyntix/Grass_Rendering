@@ -23,6 +23,11 @@ int main(int argc, char **argv)
 	{
 		window.load_mesh(argv[2], TERRAIN);
 	}
+
+	if(argc > 3)
+	{
+		window.load_mesh(argv[3], GRASS);
+	}
 	
 	glutMainLoop();
 }

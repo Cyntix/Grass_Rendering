@@ -267,9 +267,20 @@ draw_scene(DrawMode _draw_mode)
 	m_meshShaderStencil.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
 	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
 
-	//grass
+	//grass bilboard
+	Vector3 centerGrassToCamera = (m_camera.origin()- m_Grass.origin());
+	Vector3 projection_on_y = Vector3(centerGrassToCamera.x, 0, centerGrassToCamera.z).normalize();
+	Vector3 y_axis = Vector3(0, 1, 0);
+	Vector3 z_axis = Vector3(0, 0, 1);
+	float grassRotationAngle = acos(projection_on_y.dot(z_axis));
+	if(m_camera.origin().x < 0) {
+		grassRotationAngle = -grassRotationAngle;
+	}
+
+	m_Grass.rotateObject(y_axis, grassRotationAngle);
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
 	draw_object(m_meshShaderStencil, m_Grass, m_showTextureGrass);
+	m_Grass.rotateObject(y_axis, -grassRotationAngle);	
 
 	m_meshShaderStencil.unbind();
 }

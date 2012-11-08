@@ -1,0 +1,13 @@
+/////////////
+//BILLBOARD//
+/////////////
+
+In this project, we would like the grass planes to follow the camera, such that it cannot be noticeable, that
+they are planes. The rotation is only applied on the x and z axes. We do not want the y axis, because we think it would be too weird if the planes were all visible when we are looking the terrain from the top of the scene.
+Here is how we proceeded:
+1. We compute centerGrassToCamera: the vector starting from the center of the plane to the camera.
+2. We compute projection_on_y: the centerGrassToCamera projected on the y axis (y coordinate at 0). We normalize it.
+3. We compute grassRotationAngle: the angle between the z axis and projection_on_y by using the dot product. If the z coordinate of the camera is smaller than 0, then the grass should rotate in the opposite way, so grassRotationAngle becomes -grassRotationAngle.
+4. We rotate the plane around the y axis.
+5. We draw the plane.
+6. We rotate the plane to its original position.

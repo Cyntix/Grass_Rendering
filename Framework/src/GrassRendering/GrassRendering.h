@@ -36,6 +36,7 @@ enum MeshType
 	SKY = 0,
 	TERRAIN,
 	GRASS,
+	PARTICLES,
 };
 
 class GrassRendering : public TrackballViewer
@@ -58,6 +59,7 @@ protected:
 	
 	virtual void draw_scene(DrawMode _draw_mode);
 
+	void draw_billboard(Shader& sh, Mesh3D& mesh);
     void draw_object(Shader& sh, Mesh3D& mesh);
 	void draw_object(Shader& sh, Mesh3D& mesh, bool showTexture);
 
@@ -67,6 +69,7 @@ protected:
 	Mesh3D m_Sky;
 	Mesh3D m_Terrain;
 	Mesh3D m_Grass;
+	Mesh3D m_Particles;
 	
 	// directional light
 	Light3D m_light;
@@ -86,6 +89,7 @@ protected:
 	float m_SkyScale;
 	float m_TerrainScale;
 	float m_GrassScale;
+	float m_ParticlesScale;
 	
 	//translation factors
 	

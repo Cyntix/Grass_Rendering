@@ -2,6 +2,6 @@ illum 4
 Kd 1.00 1.00 1.00
 Ka 1.00 1.00 1.00
 Tf 1.00 1.00 1.00
-map_Kd textures\grass2.tga
-map_alpha textures\grass2_alpha.tga
+map_Kd textures\grass3.tga
+map_alpha textures\grass3_alpha.tga
 Ni 1.00

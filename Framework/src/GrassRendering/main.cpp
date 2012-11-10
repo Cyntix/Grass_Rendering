@@ -28,6 +28,11 @@ int main(int argc, char **argv)
 	{
 		window.load_mesh(argv[3], GRASS);
 	}
+
+	if(argc > 4)
+	{
+		window.load_mesh(argv[4], PARTICLES);
+	}
 	
 	glutMainLoop();
 }

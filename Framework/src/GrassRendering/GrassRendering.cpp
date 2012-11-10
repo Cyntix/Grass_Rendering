@@ -58,7 +58,8 @@ init()
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-	m_GrassScale = 1000.0;
+	m_GrassScale = 750.0;
+	m_ParticlesScale = 4000.0;
 }
 
 
@@ -117,6 +118,16 @@ load_mesh(const std::string& filenameObj, MeshType type)
 			
 			m_Grass.scaleObject(Vector3(m_GrassScale, m_GrassScale, m_GrassScale));
 			m_showTextureGrass = m_Grass.hasUvTextureCoord();
+			break;
+		case PARTICLES:
+			// load mesh from obj
+			Mesh3DReader::read( filenameObj, m_Particles);
+			
+			// calculate normals
+			if(!m_Particles.hasNormals())
+				m_Particles.calculateVertexNormals();
+			
+			m_Particles.scaleObject(Vector3(m_ParticlesScale, m_ParticlesScale, m_ParticlesScale));
 			break;
 		default:
 			break;
@@ -249,7 +260,6 @@ draw_scene(DrawMode _draw_mode)
 	//-------------------------------
 	
 	m_meshShaderDiffuse.bind();
-
 	m_meshShaderDiffuse.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
 	m_meshShaderDiffuse.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
 	m_meshShaderDiffuse.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
@@ -258,16 +268,25 @@ draw_scene(DrawMode _draw_mode)
 	//terrain
 	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
 	draw_object(m_meshShaderDiffuse, m_Terrain, m_showTextureTerrain);
-
 	m_meshShaderDiffuse.unbind();
 
+	//grass
 	m_meshShaderStencil.bind();
 	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
 	m_meshShaderStencil.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
 	m_meshShaderStencil.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
 	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
 
-	//grass bilboard
+	for(int i = 0; i<m_Particles.getNumberOfVertices(); i++) {
+		m_Grass.translateWorld(m_Particles.getVertexPosition(i)*m_ParticlesScale);
+		draw_billboard(m_meshShaderStencil, m_Grass);
+		m_Grass.translateWorld(-m_Particles.getVertexPosition(i)*m_ParticlesScale);
+	}
+
+	m_meshShaderStencil.unbind();
+}
+
+void GrassRendering::draw_billboard(Shader& sh, Mesh3D& mesh){
 	Vector3 centerGrassToCamera = (m_camera.origin()- m_Grass.origin());
 	Vector3 projection_on_y = Vector3(centerGrassToCamera.x, 0, centerGrassToCamera.z).normalize();
 	Vector3 y_axis = Vector3(0, 1, 0);
@@ -281,8 +300,6 @@ draw_scene(DrawMode _draw_mode)
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
 	draw_object(m_meshShaderStencil, m_Grass, m_showTextureGrass);
 	m_Grass.rotateObject(y_axis, -grassRotationAngle);	
-
-	m_meshShaderStencil.unbind();
 }
 
 

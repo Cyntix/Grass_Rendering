@@ -10,7 +10,7 @@ uniform vec3 lightcolor;
 void main()
 {	
     vec4 alphaTex = texture2D(alpha, gl_TexCoord[0].xy);
-    if(useTexture == 1 && alphaTex.x <0.5){
+    if(useTexture == 1 && alphaTex.x < 0.9){
         discard;
     }
 	vec4 finalcolor = vec4(0.0);

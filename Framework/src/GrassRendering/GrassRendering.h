@@ -60,8 +60,13 @@ protected:
 	virtual void draw_scene(DrawMode _draw_mode);
 
 	void draw_billboard(Shader& sh, Mesh3D& mesh);
+	void draw_buffer(Shader& sh, boolean showTexture);
     void draw_object(Shader& sh, Mesh3D& mesh);
 	void draw_object(Shader& sh, Mesh3D& mesh, bool showTexture);
+
+	Vector3 GrassRendering::getVertex(int i);
+	Vector3 GrassRendering::getVertexNormal(int i);
+	Vector2 GrassRendering::getTexCoord(int i);
 
 protected:
 	
@@ -70,6 +75,9 @@ protected:
 	Mesh3D m_Terrain;
 	Mesh3D m_Grass;
 	Mesh3D m_Particles;
+
+	//Vertex buffer
+	GLuint vbo;
 	
 	// directional light
 	Light3D m_light;

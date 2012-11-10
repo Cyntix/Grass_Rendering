@@ -128,6 +128,11 @@ public:
     {
         return m_vertexColors[index];
     }
+
+	const Vector2& getVertexUVs(int index) const
+    {
+		return m_vertexUV[index];
+    }
     
     // ---------------------------------------------------------------------------------
     

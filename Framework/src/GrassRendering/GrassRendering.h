@@ -64,8 +64,8 @@ protected:
     void draw_object(Shader& sh, Mesh3D& mesh);
 	void draw_object(Shader& sh, Mesh3D& mesh, bool showTexture);
 
-	Vector3 GrassRendering::getVertex(int i);
-	Vector3 GrassRendering::getVertexNormal(int i);
+	Vector3 GrassRendering::getVertex(int i, boolean rotation);
+	Vector3 GrassRendering::getVertexNormal(int i, boolean rotation);
 	Vector2 GrassRendering::getTexCoord(int i);
 
 protected:

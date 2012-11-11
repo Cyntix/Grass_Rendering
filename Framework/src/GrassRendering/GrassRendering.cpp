@@ -133,53 +133,91 @@ load_mesh(const std::string& filenameObj, MeshType type)
 
 			//VBO
 			glBindBuffer(GL_ARRAY_BUFFER, vbo); //activation of the buffer
-			glBufferData(GL_ARRAY_BUFFER, m_Particles.getNumberOfVertices()*(6*3*sizeof(double) + 6*3*sizeof(double) + 6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
+			glBufferData(GL_ARRAY_BUFFER, m_Particles.getNumberOfVertices()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
 			for(int i = 0; i<m_Particles.getNumberOfVertices(); i++){
-				double data[6*3];
-				double dataNormals[6*3];
-				double dataCoords[6*2];
+				double data[2*6*3];
+				double dataNormals[2*6*3];
+				double dataCoords[2*6*2];
 				m_Grass.scaleObject(Vector3(m_GrassScale, m_GrassScale, m_GrassScale));
 				m_Grass.translateWorld(m_Particles.getVertexPosition(i)*m_ParticlesScale);
 				//Vertices
-				data[0] = getVertex(0).x;
-				data[1] = getVertex(0).y;
-				data[2] = getVertex(0).z;
-				data[3] = getVertex(2).x;
-				data[4] = getVertex(2).y;
-				data[5] = getVertex(2).z;
-				data[6] = getVertex(3).x;
-				data[7] = getVertex(3).y;
-				data[8] = getVertex(3).z;
-				data[9] = getVertex(2).x;
-				data[10] = getVertex(2).y;
-				data[11] = getVertex(2).z;
-				data[12] = getVertex(3).x;
-				data[13] = getVertex(3).y;
-				data[14] = getVertex(3).z;
-				data[15] = getVertex(1).x;
-				data[16] = getVertex(1).y;
-				data[17] = getVertex(1).z;
+				data[0] = getVertex(0, false).x;
+				data[1] = getVertex(0, false).y;
+				data[2] = getVertex(0, false).z;
+				data[3] = getVertex(2, false).x;
+				data[4] = getVertex(2, false).y;
+				data[5] = getVertex(2, false).z;
+				data[6] = getVertex(3, false).x;
+				data[7] = getVertex(3, false).y;
+				data[8] = getVertex(3, false).z;
+				data[9] = getVertex(2, false).x;
+				data[10] = getVertex(2, false).y;
+				data[11] = getVertex(2, false).z;
+				data[12] = getVertex(3, false).x;
+				data[13] = getVertex(3, false).y;
+				data[14] = getVertex(3, false).z;
+				data[15] = getVertex(1, false).x;
+				data[16] = getVertex(1, false).y;
+				data[17] = getVertex(1, false).z;
+
+				data[18] = getVertex(0, true).x;
+				data[19] = getVertex(0, true).y;
+				data[20] = getVertex(0, true).z;
+				data[21] = getVertex(2, true).x;
+				data[22] = getVertex(2, true).y;
+				data[23] = getVertex(2, true).z;
+				data[24] = getVertex(3, true).x;
+				data[25] = getVertex(3, true).y;
+				data[26] = getVertex(3, true).z;
+				data[27] = getVertex(2, true).x;
+				data[28] = getVertex(2, true).y;
+				data[29] = getVertex(2, true).z;
+				data[30] = getVertex(3, true).x;
+				data[31] = getVertex(3, true).y;
+				data[32] = getVertex(3, true).z;
+				data[33] = getVertex(1, true).x;
+				data[34] = getVertex(1, true).y;
+				data[35] = getVertex(1, true).z;
 
 				//Normals
-				int normalPointer = m_Particles.getNumberOfVertices()*(6*3*sizeof(double));
-				dataNormals[0] = getVertexNormal(0).x;
-				dataNormals[1] = getVertexNormal(0).y;
-				dataNormals[2] = getVertexNormal(0).z;
-				dataNormals[3] = getVertexNormal(2).x;
-				dataNormals[4] = getVertexNormal(2).y;
-				dataNormals[5] = getVertexNormal(2).z;
-				dataNormals[6] = getVertexNormal(3).x;
-				dataNormals[7] = getVertexNormal(3).y;
-				dataNormals[8] = getVertexNormal(3).z;
-				dataNormals[9] = getVertexNormal(2).x;
-				dataNormals[10] = getVertexNormal(2).y;
-				dataNormals[11] = getVertexNormal(2).z;
-				dataNormals[12] = getVertexNormal(3).x;
-				dataNormals[13] = getVertexNormal(3).y;
-				dataNormals[14] = getVertexNormal(3).z;
-				dataNormals[15] = getVertexNormal(1).x;
-				dataNormals[16] = getVertexNormal(1).y;
-				dataNormals[17] = getVertexNormal(1).z;
+				int normalPointer = m_Particles.getNumberOfVertices()*(2*6*3*sizeof(double));
+				dataNormals[0] = getVertexNormal(0, false).x;
+				dataNormals[1] = getVertexNormal(0, false).y;
+				dataNormals[2] = getVertexNormal(0, false).z;
+				dataNormals[3] = getVertexNormal(2, false).x;
+				dataNormals[4] = getVertexNormal(2, false).y;
+				dataNormals[5] = getVertexNormal(2, false).z;
+				dataNormals[6] = getVertexNormal(3, false).x;
+				dataNormals[7] = getVertexNormal(3, false).y;
+				dataNormals[8] = getVertexNormal(3, false).z;
+				dataNormals[9] = getVertexNormal(2, false).x;
+				dataNormals[10] = getVertexNormal(2, false).y;
+				dataNormals[11] = getVertexNormal(2, false).z;
+				dataNormals[12] = getVertexNormal(3, false).x;
+				dataNormals[13] = getVertexNormal(3, false).y;
+				dataNormals[14] = getVertexNormal(3, false).z;
+				dataNormals[15] = getVertexNormal(1, false).x;
+				dataNormals[16] = getVertexNormal(1, false).y;
+				dataNormals[17] = getVertexNormal(1, false).z;
+
+				dataNormals[18] = getVertexNormal(0, true).x;
+				dataNormals[19] = getVertexNormal(0, true).y;
+				dataNormals[20] = getVertexNormal(0, true).z;
+				dataNormals[21] = getVertexNormal(2, true).x;
+				dataNormals[22] = getVertexNormal(2, true).y;
+				dataNormals[23] = getVertexNormal(2, true).z;
+				dataNormals[24] = getVertexNormal(3, true).x;
+				dataNormals[25] = getVertexNormal(3, true).y;
+				dataNormals[26] = getVertexNormal(3, true).z;
+				dataNormals[27] = getVertexNormal(2, true).x;
+				dataNormals[28] = getVertexNormal(2, true).y;
+				dataNormals[29] = getVertexNormal(2, true).z;
+				dataNormals[30] = getVertexNormal(3, true).x;
+				dataNormals[31] = getVertexNormal(3, true).y;
+				dataNormals[32] = getVertexNormal(3, true).z;
+				dataNormals[33] = getVertexNormal(1, true).x;
+				dataNormals[34] = getVertexNormal(1, true).y;
+				dataNormals[35] = getVertexNormal(1, true).z;
 
 				//TexCoords
 				int texPointer = 2*normalPointer;
@@ -195,10 +233,23 @@ load_mesh(const std::string& filenameObj, MeshType type)
 				dataCoords[9] = getTexCoord(3).y;
 				dataCoords[10] = getTexCoord(1).x;
 				dataCoords[11] = getTexCoord(1).y;
-				//DEMANDER AUX ASSISTANTS
-				glBufferSubData(GL_ARRAY_BUFFER, i*6*3*sizeof(double), 6*3*sizeof(double), data);
-				glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*6*3*sizeof(double), 6*3*sizeof(double), dataNormals);
-				glBufferSubData(GL_ARRAY_BUFFER, texPointer+i*6*2*sizeof(double), 6*2*sizeof(double), dataCoords);
+
+				dataCoords[12] = getTexCoord(0).x;
+				dataCoords[13] = getTexCoord(0).y;
+				dataCoords[14] = getTexCoord(2).x;
+				dataCoords[15] = getTexCoord(2).y;
+				dataCoords[16] = getTexCoord(3).x;
+				dataCoords[17] = getTexCoord(3).y;
+				dataCoords[18] = getTexCoord(2).x;
+				dataCoords[19] = getTexCoord(2).y;
+				dataCoords[20] = getTexCoord(3).x;
+				dataCoords[21] = getTexCoord(3).y;
+				dataCoords[22] = getTexCoord(1).x;
+				dataCoords[23] = getTexCoord(1).y;
+				//DEMANDER AUX ASSISTANTS POUR MODULARISER
+				glBufferSubData(GL_ARRAY_BUFFER, i*2*6*3*sizeof(double), 2*6*3*sizeof(double), data);
+				glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*2*6*3*sizeof(double), 6*2*3*sizeof(double), dataNormals);
+				glBufferSubData(GL_ARRAY_BUFFER, texPointer+i*2*6*2*sizeof(double), 2*6*2*sizeof(double), dataCoords);
 				m_Grass.setTransformation(Matrix4().loadIdentity());
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -210,14 +261,28 @@ load_mesh(const std::string& filenameObj, MeshType type)
 	
 }
 
-Vector3 GrassRendering::getVertex(int i){
+Vector3 GrassRendering::getVertex(int i, boolean rotation){
 	Vector3 vertexObject = m_Grass.getVertexPosition(i);
-	return m_Grass.getTransformation()*vertexObject;
+	if(rotation){
+		m_Grass.rotateObject(Vector3(0, 1, 0), M_PI/2);
+	}
+	Matrix4 trans = m_Grass.getTransformation();
+	if(rotation){
+		m_Grass.rotateObject(Vector3(0, 1, 0), -M_PI/2);
+	}
+	return trans*vertexObject;
 }
 
-Vector3 GrassRendering::getVertexNormal(int i){
-	Vector3 vertexObject = m_Grass.getVertexNormal(i);
-	return m_Grass.getTransformation()*vertexObject;
+Vector3 GrassRendering::getVertexNormal(int i, boolean rotation){
+	Vector3 vertexNormal = m_Grass.getVertexNormal(i);
+	if(rotation){
+		m_Grass.rotateObject(Vector3(0, 1, 0), M_PI/2);
+	}
+	Matrix4 trans = m_Grass.getTransformation();
+	if(rotation){
+		m_Grass.rotateObject(Vector3(0, 1, 0), -M_PI/2);
+	}
+	return trans*vertexNormal;
 }
 
 Vector2 GrassRendering::getTexCoord(int i){
@@ -395,7 +460,6 @@ draw_scene(DrawMode _draw_mode)
 
 void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 	sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
-	sh.setVector3Uniform("cameraPos", m_camera.origin().x, m_camera.origin().y, m_camera.origin().z);
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -405,9 +469,9 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	
 	glVertexPointer(3, GL_DOUBLE, 0, BUFFER_OFFSET(0));
-	glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET(m_Particles.getNumberOfVertices()*(6*3*sizeof(double))));
+	glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET(m_Particles.getNumberOfVertices()*(2*6*3*sizeof(double))));
 	if(showTexture){
-		glTexCoordPointer(2, GL_DOUBLE, 0, BUFFER_OFFSET(2*m_Particles.getNumberOfVertices()*(6*3*sizeof(double))));
+		glTexCoordPointer(2, GL_DOUBLE, 0, BUFFER_OFFSET(2*m_Particles.getNumberOfVertices()*(2*6*3*sizeof(double))));
 	}
 
 	sh.setIntUniform("useTexture", showTexture && m_Grass.getMaterial().hasDiffuseTexture());
@@ -427,7 +491,7 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 			}
 		}
 		
-		glDrawArrays(GL_TRIANGLES, 0, m_Particles.getNumberOfVertices()*6);
+		glDrawArrays(GL_TRIANGLES, 0, m_Particles.getNumberOfVertices()*2*6);
 		cout<<"\n";
 
 		if(showTexture && m_Grass.getMaterial().hasDiffuseTexture())

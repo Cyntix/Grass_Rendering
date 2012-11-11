@@ -34,12 +34,15 @@ void
 GrassRendering::
 init()
 {
-  // initialize parent
-  TrackballViewer::init();
+	// initialize parent
+	TrackballViewer::init();
 
-  // set camera to look at world coordinate center
-  set_scene_pos(Vector3(0.0, 0.0, 0.0), 2.0);
+	// set camera to look at world coordinate center
+	set_scene_pos(Vector3(0.0, 0.0, 0.0), 2.0);
 	
+	direction = 0;
+	up = true;
+
 	glGenBuffers(1, &vbo);
 
 	// load mesh shader
@@ -376,7 +379,15 @@ void GrassRendering::idle()
 		totalDaysElapsed += daysElapsed;
 		
 		//INSERT ANIMATION
-
+		if(up){
+		direction += daysElapsed/50;
+		}else {
+			direction -= daysElapsed/50;
+		}
+		if(direction > 0.25 || direction < 0){
+			up = !up;
+		}
+		cout<<direction<<"\n";
 		glutPostRedisplay();
 	}
 }
@@ -461,6 +472,7 @@ draw_scene(DrawMode _draw_mode)
 void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 	sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
+	m_meshShaderStencil.setFloatUniform("direction", direction);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
@@ -528,7 +540,6 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh)
 {
 	sh.setMatrix4x4Uniform("modelworld", mesh.getTransformation() );
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", mesh.getTransformation().Inverse().Transpose());
-
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);

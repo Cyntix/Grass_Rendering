@@ -78,7 +78,10 @@ protected:
 
 	//Vertex buffer
 	GLuint vbo;
-	
+
+	//animation
+	float direction;
+	boolean up;
 	// directional light
 	Light3D m_light;
 	float m_recSunlightInt;

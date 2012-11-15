@@ -31,12 +31,7 @@ int main(int argc, char **argv)
 
 	if(argc > 4)
 	{
-		window.load_mesh(argv[4], PARTICLES);
-	}
-
-	if(argc > 5)
-	{
-		window.load_mesh(argv[5], PATTERN1);
+		window.load_mesh(argv[4], PARTICLE_PATTERN);
 		window.load_grass();
 	}
 	

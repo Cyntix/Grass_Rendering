@@ -36,10 +36,7 @@ enum MeshType
 	SKY = 0,
 	TERRAIN,
 	GRASS,
-	PARTICLES,
-	PATTERN1,
-	PATTERN2,
-	PATTERN3,
+	PARTICLE_PATTERN,
 };
 
 class GrassRendering : public TrackballViewer
@@ -79,13 +76,10 @@ protected:
 	Mesh3D m_Sky;
 	Mesh3D m_Terrain;
 	Mesh3D m_Grass;
-	Mesh3D m_Particles;
 
 	//particles system
 	vector<Vector3> particles;
 	Mesh3D m_Pattern1;
-	Mesh3D m_Pattern2;
-	Mesh3D m_Pattern3;
 	//Vertex buffer
 	GLuint vbo;
 

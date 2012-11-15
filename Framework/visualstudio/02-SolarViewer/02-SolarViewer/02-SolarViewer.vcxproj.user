@@ -4,6 +4,6 @@
     <LocalDebuggerWorkingDirectory>$(SolutionDir)\..\..\..\src\GrassRendering</LocalDebuggerWorkingDirectory>
     <LocalDebuggerEnvironment>PATH=%PATH%;$(SolutionDir)\..\..\libs</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>"$(SolutionDir)\..\..\data\sky\sky.obj" "$(SolutionDir)\..\..\data\terrain\terrain.obj" "$(SolutionDir)\..\..\data\grass\grass.obj" "$(SolutionDir)\..\..\data\particles\particles.obj" "$(SolutionDir)\..\..\data\particles\pattern.obj" </LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"$(SolutionDir)\..\..\data\sky\sky.obj" "$(SolutionDir)\..\..\data\terrain\terrain.obj" "$(SolutionDir)\..\..\data\grass\grass.obj" "$(SolutionDir)\..\..\data\particles\pattern.obj" </LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>

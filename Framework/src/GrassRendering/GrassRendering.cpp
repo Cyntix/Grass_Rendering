@@ -64,7 +64,7 @@ init()
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-	m_GrassScale = 500;
+	m_GrassScale = 250;
 	m_ParticlesScale = 4000.0;
 	m_PatternsScale = 1000;
 }
@@ -125,18 +125,7 @@ load_mesh(const std::string& filenameObj, MeshType type)
 			
 			m_showTextureGrass = m_Grass.hasUvTextureCoord();
 			break;
-		case PARTICLES:{
-			// load mesh from obj
-			Mesh3DReader::read( filenameObj, m_Particles);
-			
-			// calculate normals
-			if(!m_Particles.hasNormals())
-				m_Particles.calculateVertexNormals();
-			
-			m_Particles.scaleObject(Vector3(m_ParticlesScale, m_ParticlesScale, m_ParticlesScale));
-			break;
-		}
-		case PATTERN1:{
+		case PARTICLE_PATTERN:{
 			// load mesh from obj
 			Mesh3DReader::read( filenameObj, m_Pattern1);
 			
@@ -147,28 +136,6 @@ load_mesh(const std::string& filenameObj, MeshType type)
 			m_Pattern1.scaleObject(Vector3(m_PatternsScale, m_PatternsScale, m_PatternsScale));
 			break;
 		}
-		case PATTERN2:{
-			// load mesh from obj
-			Mesh3DReader::read( filenameObj, m_Pattern2);
-			
-			// calculate normals
-			if(!m_Pattern2.hasNormals())
-				m_Pattern2.calculateVertexNormals();
-			
-			m_Pattern2.scaleObject(Vector3(m_PatternsScale, m_PatternsScale, m_PatternsScale));
-			break;
-		}
-		case PATTERN3:{
-			// load mesh from obj
-			Mesh3DReader::read( filenameObj, m_Pattern3);
-			
-			// calculate normals
-			if(!m_Pattern3.hasNormals())
-				m_Pattern3.calculateVertexNormals();
-			
-			m_Pattern3.scaleObject(Vector3(m_PatternsScale, m_PatternsScale, m_PatternsScale));
-			break;
-		}
 		default:
 			break;
 	}	
@@ -176,26 +143,24 @@ load_mesh(const std::string& filenameObj, MeshType type)
 
 void GrassRendering::load_grass(){
 	Vector3 starting_point = m_Terrain.origin();
-	starting_point.x = starting_point.x-m_TerrainScale/2;
-	starting_point.z = starting_point.z-m_TerrainScale/2;
+	starting_point.x = starting_point.x-m_TerrainScale;
+	starting_point.z = starting_point.z-m_TerrainScale;
 
 	m_Pattern1.translateWorld(starting_point);
 	int x_gone = 0;
 	do{
-		cout<<m_Pattern1.getNumberOfVertices()<<"\n";
+		cout<<"Creation of the blind of grass on position: (" << m_Pattern1.origin().x << ", " << m_Pattern1.origin().y << ", " << m_Pattern1.origin().z << ")...\n";
 		for(int i = 0; i<m_Pattern1.getNumberOfVertices(); i++){
-			particles.push_back(m_Pattern1.getTransformation()* m_Pattern1.getVertexPosition(i));
+			particles.push_back(m_Pattern1.getTransformation() * m_Pattern1.getVertexPosition(i));
 		}
-		cout<<"x: " <<(m_Pattern1.origin()).x;
-		cout<<"z: " <<(m_Pattern1.origin()).z;
-		if(m_Pattern1.origin().x<=(m_TerrainScale/2)){			
+		if(m_Pattern1.origin().x<=m_TerrainScale){			
 			m_Pattern1.translateWorld(Vector3(m_PatternsScale, 0, 0));
 			x_gone += m_PatternsScale;
 		}else {
 			m_Pattern1.translateWorld(Vector3(-x_gone, 0, m_PatternsScale));
 			x_gone = 0;
 		}
-	}while(abs(m_Pattern1.origin().z)<=m_TerrainScale/2);
+	}while(abs(m_Pattern1.origin().z)<=m_TerrainScale);
 	m_Pattern1.setTransformation(Matrix4().loadIdentity());
 	//VBO
 	glBindBuffer(GL_ARRAY_BUFFER, vbo); //activation of the buffer
@@ -439,11 +404,11 @@ void GrassRendering::idle()
 		
 		//INSERT ANIMATION
 		if(up){
-		direction += daysElapsed/50;
+		direction += daysElapsed/25;
 		}else {
-			direction -= daysElapsed/50;
+			direction -= daysElapsed/25;
 		}
-		if(direction > 0.25 || direction < 0){
+		if(direction > 0.5 || direction < 0){
 			up = !up;
 		}
 		cout<<direction<<"\n";
@@ -537,7 +502,9 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	if(showTexture){
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	}
 	
 	glVertexPointer(3, GL_DOUBLE, 0, BUFFER_OFFSET(0));
 	glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET(particles.size()*(2*6*3*sizeof(double))));
@@ -571,7 +538,9 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 			m_Grass.getMaterial().m_alphaTexture.unbind();
 		}
 	
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	if(showTexture){
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	}
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

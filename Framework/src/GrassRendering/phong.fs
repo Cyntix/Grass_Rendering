@@ -10,7 +10,7 @@ void main()
 	vec3 color = ( (useTexture > 0) ? diffuseColor*texture2D(texture, gl_TexCoord[0].xy).xyz : diffuseColor );
 	
 
-	vec4 final_color = vec4(0.0);				
+	vec4 final_color = vec4( 0.0, 0.0, 0.0, 0.0 );				
 	vec3 N = normalize(normal);
 	vec3 L = normalize(lightDir);
 	float lambertTerm = dot(N, L);
@@ -25,7 +25,7 @@ void main()
 		
 	}
 	
-	float coef = smoothstep(1.0,0.2,max(lambertTerm,0.0));
+	float coef = smoothstep( 1.0, 0.2,max(lambertTerm,0.0) );
 	final_color += coef * vec4(color, 1.0);
 	
 	//ambient

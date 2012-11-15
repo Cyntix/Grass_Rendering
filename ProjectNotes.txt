@@ -1,0 +1,29 @@
+Sources:
+
+http://johanneskopf.de/publications/blue_noise /tilesets/index.html
+Example tile set -> xy pos, then use z:height of the terrain
+
+Alpha to coverage algorithm
+
+AlphaTestedMagnification in valvesoftware
+
+http://www.kevinboulanger.net/grass.html
+http://www.youtube.com/watch?v=iX2TylpqI7Q
+
+
+Plan:
+
+sampling, then rendering and geometry
+
+terrain importe, particules,
+
+utiliser blue noise, ou sinon truc avec probabilite d'etre . random (1 -> pt, <1 peut-etre pt)
+
+
+Ce de Kevin Boulanger: (Rendering Grass)
+
+billboard, cross stencil, vraie herbe devant
+
+
+Sofian Bouaziz, Boris Neubert
+

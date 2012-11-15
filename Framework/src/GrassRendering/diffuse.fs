@@ -11,7 +11,7 @@ void main()
 	//Exercise 4.4: Calculate the reflected intensities for the direct sun light (using lightDir and lightcolor) 
 	//and indirect light (using indirectLightDir and indirectlightcolor)
 		
-	vec4 finalcolor = vec4(0.0);
+	vec4 finalcolor = vec4(0.0, 0.0, 0.0, 0.0);
 	
 	vec3 color = diffuseColor;
     if(useTexture!=0)

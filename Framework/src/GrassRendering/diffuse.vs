@@ -14,7 +14,7 @@ void main()
 	// transform vertex to camera coordinates
 	vec3 vertex = vec3( worldcamera * modelworld * gl_Vertex );
 	//TO MODIFY LATER
-	vec3 lightpositionCamera = 1;
+	vec3 lightpositionCamera = vec3( 1.0, 1.0, 1.0 );
 
 	// get texture coordinate
 	gl_TexCoord[0]  = gl_MultiTexCoord0;

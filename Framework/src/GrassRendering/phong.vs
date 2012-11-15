@@ -14,7 +14,7 @@ void main()
 	vec3 vertex = vec3( worldcamera * modelworld * gl_Vertex );
 	
 	// calculate light direction
-	lightDir = vec3(lightposition - vertex );
+	lightDir = vec3(lightposition - vertex, lightposition - vertex, lightposition - vertex );
 	
 	// calculate direction towards vertex
 	eyeVec = -vertex;

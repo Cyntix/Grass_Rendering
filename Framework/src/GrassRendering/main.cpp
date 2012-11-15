@@ -33,6 +33,12 @@ int main(int argc, char **argv)
 	{
 		window.load_mesh(argv[4], PARTICLES);
 	}
+
+	if(argc > 5)
+	{
+		window.load_mesh(argv[5], PATTERN1);
+		window.load_grass();
+	}
 	
 	glutMainLoop();
 }

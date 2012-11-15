@@ -24,7 +24,7 @@ void main()
 	normal = normalize( worldcameraNormal * modelworldNormal * gl_Normal );
 
 	//TO MODIFY LATER
-	vec3 lightpositionCamera = vec3( 1.0, 1.0, 1.0 );
+	vec3 lightpositionCamera = vec3( 0.0, 1000.0, -1000.0);
 
 	// get texture coordinate
 	gl_TexCoord[0]  = gl_MultiTexCoord0;

@@ -15,15 +15,15 @@ void main()
     }
 	vec4 finalcolor = vec4(0.0);
 	
-	vec3 color = diffuseColor;
+	vec3 ambiant = diffuseColor;
     if(useTexture!=0)
     {
-        color = texture2D(texture, gl_TexCoord[0].xy).xyz * color;
+        ambiant = texture2D(texture, gl_TexCoord[0].xy).xyz * ambiant;
     }
-    color = color*lightcolor*max(0.0, dot(normal, lightDir));
+    vec3 diffused = ambiant*lightcolor*max(0.0, dot(normal, lightDir));
 
 	//also add a small ambient term
-	finalcolor += vec4(color, 1.0) + vec4(color, 1.0)*0.1;	
+	finalcolor += vec4(diffused, 1.0) + vec4(ambiant, 1.0)*0.75;	
 
 	gl_FragColor = finalcolor;
 }

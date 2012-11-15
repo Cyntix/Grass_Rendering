@@ -37,6 +37,9 @@ enum MeshType
 	TERRAIN,
 	GRASS,
 	PARTICLES,
+	PATTERN1,
+	PATTERN2,
+	PATTERN3,
 };
 
 class GrassRendering : public TrackballViewer
@@ -46,8 +49,10 @@ public:
 	GrassRendering(const char* _title, int _width, int _height);
   
 	void load_mesh(const std::string& filenameObj, MeshType type);
+
+	void load_grass();
 	
-	Mesh3D& getStars() {return m_Sky; }
+	Mesh3D& getSky() {return m_Sky; }
 
 protected:
 
@@ -76,6 +81,11 @@ protected:
 	Mesh3D m_Grass;
 	Mesh3D m_Particles;
 
+	//particles system
+	vector<Vector3> particles;
+	Mesh3D m_Pattern1;
+	Mesh3D m_Pattern2;
+	Mesh3D m_Pattern3;
 	//Vertex buffer
 	GLuint vbo;
 
@@ -101,6 +111,7 @@ protected:
 	float m_TerrainScale;
 	float m_GrassScale;
 	float m_ParticlesScale;
+	float m_PatternsScale;
 	
 	//translation factors
 	

@@ -143,6 +143,9 @@ load_mesh(const std::string& filenameObj, MeshType type)
 				double dataCoords[2*6*2];
 				m_Grass.scaleObject(Vector3(m_GrassScale, m_GrassScale, m_GrassScale));
 				m_Grass.translateWorld(m_Particles.getVertexPosition(i)*m_ParticlesScale);
+
+				float arbitraryAngle = drand48() * 2 * M_PI;
+				m_Grass.rotateObject(Vector3(0,1,0), arbitraryAngle);
 				//Vertices
 				data[0] = getVertex(0, false).x;
 				data[1] = getVertex(0, false).y;
@@ -264,25 +267,25 @@ load_mesh(const std::string& filenameObj, MeshType type)
 	
 }
 
-Vector3 GrassRendering::getVertex(int i, boolean rotation){
+Vector3 GrassRendering::getVertex(int i, boolean cross){
 	Vector3 vertexObject = m_Grass.getVertexPosition(i);
-	if(rotation){
+	if(cross){
 		m_Grass.rotateObject(Vector3(0, 1, 0), M_PI/2);
 	}
 	Matrix4 trans = m_Grass.getTransformation();
-	if(rotation){
+	if(cross){
 		m_Grass.rotateObject(Vector3(0, 1, 0), -M_PI/2);
 	}
 	return trans*vertexObject;
 }
 
-Vector3 GrassRendering::getVertexNormal(int i, boolean rotation){
+Vector3 GrassRendering::getVertexNormal(int i, boolean cross){
 	Vector3 vertexNormal = m_Grass.getVertexNormal(i);
-	if(rotation){
+	if(cross){
 		m_Grass.rotateObject(Vector3(0, 1, 0), M_PI/2);
 	}
 	Matrix4 trans = m_Grass.getTransformation();
-	if(rotation){
+	if(cross){
 		m_Grass.rotateObject(Vector3(0, 1, 0), -M_PI/2);
 	}
 	return trans*vertexNormal;

@@ -96,9 +96,11 @@ protected:
 	Shader m_meshShaderTexture;
 	Shader m_meshShaderStencil;
 	
+	bool m_showGrass;
 	bool m_showTextureSky;
 	bool m_showTextureTerrain;
 	bool m_showTextureGrass;
+	bool m_showAlphaToCoverage;
 	
 	//scaling factors
 	float m_SkyScale;

@@ -64,7 +64,7 @@ init()
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-	m_GrassScale = 250;
+	m_GrassScale = 200;
 	m_ParticlesScale = 4000.0;
 	m_PatternsScale = 1000;
 }
@@ -286,6 +286,8 @@ void GrassRendering::load_grass(){
 		m_Grass.setTransformation(Matrix4().loadIdentity());
 		}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	m_showGrass = true;
+	m_showAlphaToCoverage = true;
 }
 
 Vector3 GrassRendering::getVertex(int i, boolean cross){
@@ -326,12 +328,6 @@ keyboard(int key, int x, int y)
 {
 	switch (key)
 	{			
-		case 'h':
-			printf("Help:\n");
-			printf("'h'\t-\thelp\n");
-			printf("'t'\t-\ttoggle texture\n");
-			printf("'arrow keys\t-\tchange speed of rotation\n");
-			break;
 		case 't':
 			m_showTextureSky = !m_showTextureSky;
 			if(!m_Sky.hasUvTextureCoord()) m_showTextureSky = false;
@@ -341,6 +337,12 @@ keyboard(int key, int x, int y)
 
 			m_showTextureGrass = !m_showTextureGrass;
 			if(!m_Grass.hasUvTextureCoord()) m_showTextureGrass = false;
+			break;
+		case 'g':
+			m_showGrass = !m_showGrass;
+			break;
+		case 'a':
+			m_showAlphaToCoverage = !m_showAlphaToCoverage;
 			break;
 		case ' ':
 			if(isWatchOn)
@@ -494,56 +496,69 @@ draw_scene(DrawMode _draw_mode)
 }
 
 void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
-	sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
-	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
-	m_meshShaderStencil.setFloatUniform("direction", direction);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	if(showTexture){
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	}
-	
-	glVertexPointer(3, GL_DOUBLE, 0, BUFFER_OFFSET(0));
-	glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET(particles.size()*(2*6*3*sizeof(double))));
-	if(showTexture){
-		glTexCoordPointer(2, GL_DOUBLE, 0, BUFFER_OFFSET(2*particles.size()*(2*6*3*sizeof(double))));
-	}
-
-	sh.setIntUniform("useTexture", showTexture && m_Grass.getMaterial().hasDiffuseTexture());
-		sh.setVector3Uniform("diffuseColor", 
-							 m_Grass.getMaterial().m_diffuseColor.x, 
-							 m_Grass.getMaterial().m_diffuseColor.y, 
-							 m_Grass.getMaterial().m_diffuseColor.z );
-		sh.setFloatUniform("specularExp", m_Grass.getMaterial().m_specularExp);
-
-	if(showTexture && m_Grass.getMaterial().hasDiffuseTexture())
-		{
-			m_Grass.getMaterial().m_diffuseTexture.bind();
-			sh.setIntUniform("texture", m_Grass.getMaterial().m_diffuseTexture.getLayer());
-			if(m_Grass.getMaterial().hasAlphaTexture()){
-				m_Grass.getMaterial().m_alphaTexture.bind();
-				sh.setIntUniform("alpha", m_Grass.getMaterial().m_alphaTexture.getLayer());
-			}
+	if(m_showGrass){
+		if(m_showAlphaToCoverage){
+			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+			glEnable(GL_ALPHA_TEST);
 		}
-		
-	glDrawArrays(GL_TRIANGLES, 0, particles.size()*2*6);
-		cout<<"\n";
+
+		sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
+		m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
+		m_meshShaderStencil.setFloatUniform("direction", direction);
+		sh.setIntUniform("useAlphaToCoverage", m_showAlphaToCoverage);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		if(showTexture){
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		}
+	
+		glVertexPointer(3, GL_DOUBLE, 0, BUFFER_OFFSET(0));
+		glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET(particles.size()*(2*6*3*sizeof(double))));
+		if(showTexture){
+			glTexCoordPointer(2, GL_DOUBLE, 0, BUFFER_OFFSET(2*particles.size()*(2*6*3*sizeof(double))));
+		}
+
+		sh.setIntUniform("useTexture", showTexture && m_Grass.getMaterial().hasDiffuseTexture());
+			sh.setVector3Uniform("diffuseColor", 
+								 m_Grass.getMaterial().m_diffuseColor.x, 
+								 m_Grass.getMaterial().m_diffuseColor.y, 
+								 m_Grass.getMaterial().m_diffuseColor.z );
+			sh.setFloatUniform("specularExp", m_Grass.getMaterial().m_specularExp);
 
 		if(showTexture && m_Grass.getMaterial().hasDiffuseTexture())
-		{
-			m_Grass.getMaterial().m_diffuseTexture.unbind();
-			m_Grass.getMaterial().m_alphaTexture.unbind();
-		}
+			{
+				m_Grass.getMaterial().m_diffuseTexture.bind();
+				sh.setIntUniform("texture", m_Grass.getMaterial().m_diffuseTexture.getLayer());
+				if(m_Grass.getMaterial().hasAlphaTexture()){
+					m_Grass.getMaterial().m_alphaTexture.bind();
+					sh.setIntUniform("alpha", m_Grass.getMaterial().m_alphaTexture.getLayer());
+				}
+			}
+		
+		glDrawArrays(GL_TRIANGLES, 0, particles.size()*2*6);
+			cout<<"\n";
+
+			if(showTexture && m_Grass.getMaterial().hasDiffuseTexture())
+			{
+				m_Grass.getMaterial().m_diffuseTexture.unbind();
+				m_Grass.getMaterial().m_alphaTexture.unbind();
+			}
 	
-	if(showTexture){
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		if(showTexture){
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		}
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+		if(m_showAlphaToCoverage){
+			glDisable(GL_ALPHA_TEST);
+			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+		}
 	}
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void GrassRendering::draw_billboard(Shader& sh, Mesh3D& mesh){

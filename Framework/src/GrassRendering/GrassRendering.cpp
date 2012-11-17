@@ -64,9 +64,9 @@ init()
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-	m_GrassScale = 200;
+	m_GrassScale = 500;
 	m_ParticlesScale = 4000.0;
-	m_PatternsScale = 1000;
+	m_PatternsScale = 2000;
 }
 
 
@@ -477,7 +477,8 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 	if(m_showGrass){
 		if(m_showAlphaToCoverage){
 			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
-			glEnable(GL_ALPHA_TEST);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 
 		sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
@@ -533,7 +534,7 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
 		if(m_showAlphaToCoverage){
-			glDisable(GL_ALPHA_TEST);
+			glDisable(GL_BLEND);
 			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
 		}
 	}

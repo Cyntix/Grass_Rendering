@@ -1,3 +1,24 @@
 ==What
+The goal of our project is to realize a realistic real-time grass rendering simulation in OpenGl. 
+The user should be able to move his camera in this field without breaking the illusion of realism. 
+If we will have time, we could then try to implement some interesting effects, like adding flowers 
+or implement the wind that moves the blades of grass to make the movement look like waves.
 
 ==How
+We still have difficulties to know what we are able or not to realize in OpenGl, but the basic idea 
+is the following:
+
+1. The terrain will be an .obj file made with Blender.
+
+2. The grass will use billboard planes with two channels of texture: one for the color, and one for the alpha.
+
+3. A stencil shader will be implemented. The objective of this shader will be to discard the fragments with a zero alpha value.
+
+4. To multiply our grass, we will use a particle system. We will create a pattern of vertices as an .obj file and our particle system will repeat it all over the terrain.
+
+5. For each vertex, a billboard plane of grass will be added.
+
+6. To simulate the wind we will use two particles systems with two sorts of billboard grass. Each type of billboard will have a different movement (shearing matrix), so the wind will not seem too artificial.
+
+We will of course add more details according to the deadline. For example, the possibility for our 
+terrain to be curved or adding flowers, etc…

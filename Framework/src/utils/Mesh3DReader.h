@@ -125,7 +125,7 @@ private:
 				#endif
 				_materialsManager.materials.back()->m_diffuseTexture.create(texturePath);
 			}
-			else if(word == "map_bump")
+			else if(word == "map_nm")
 			{
 				std::string texturePath;
 				lineStream >> texturePath;
@@ -134,8 +134,8 @@ private:
 				#else
 					texturePath = _filenameMTL.substr(0, _filenameMTL.find_last_of("/")+1) + texturePath;
 				#endif
-				_materialsManager.materials.back()->m_bumpTexture.create(texturePath);
-				_materialsManager.materials.back()->m_bumpTexture.setLayer(1);
+				_materialsManager.materials.back()->m_normal_mapTexture.create(texturePath);
+				_materialsManager.materials.back()->m_normal_mapTexture.setLayer(1);
 			}
 			else if(word == "map_alpha")
 			{

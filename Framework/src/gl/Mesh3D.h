@@ -36,14 +36,14 @@ public:
     
     bool hasDiffuseTexture() const { return m_diffuseTexture.getID() != 0; }
     
-    bool hasBumpTexture() const { return m_bumpTexture.getID() != 0; }
+    bool hasNormalMapTexture() const { return m_normal_mapTexture.getID() != 0; }
 
 	bool hasAlphaTexture() const { return m_alphaTexture.getID() != 0; }
     
     Vector3 m_diffuseColor;
     double m_specularExp;
     Texture m_diffuseTexture;
-    Texture m_bumpTexture;
+    Texture m_normal_mapTexture;
 	Texture m_alphaTexture;
 };
 

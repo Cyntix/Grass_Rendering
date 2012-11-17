@@ -457,8 +457,6 @@ draw_scene(DrawMode _draw_mode)
 	m_meshShaderDiffuse.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
 	m_meshShaderDiffuse.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
 	m_meshShaderDiffuse.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
-
-	//terrain
 	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
 	draw_object(m_meshShaderDiffuse, m_Terrain, m_showTextureTerrain);
 	m_meshShaderDiffuse.unbind();
@@ -471,28 +469,8 @@ draw_scene(DrawMode _draw_mode)
 
 	draw_buffer(m_meshShaderStencil, m_showTextureTerrain);
 
-	/*for(int i = 0; i<m_Particles.getNumberOfVertices(); i++) {
-		m_Grass.translateWorld(m_Particles.getVertexPosition(i)*m_ParticlesScale);
-		draw_buffer(m_meshShaderStencil, i);
-		m_Grass.translateWorld(-m_Particles.getVertexPosition(i)*m_ParticlesScale);
-	}*/
-
 	m_meshShaderStencil.unbind();
 
-	/*//grass
-	m_meshShaderStencil.bind();
-	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
-	m_meshShaderStencil.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
-	m_meshShaderStencil.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
-	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
-
-	for(int i = 0; i<m_Particles.getNumberOfVertices(); i++) {
-		m_Grass.translateWorld(m_Particles.getVertexPosition(i)*m_ParticlesScale);
-		draw_billboard(m_meshShaderStencil, m_Grass);
-		m_Grass.translateWorld(-m_Particles.getVertexPosition(i)*m_ParticlesScale);
-	}
-
-	m_meshShaderStencil.unbind();*/
 }
 
 void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
@@ -561,24 +539,7 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 	}
 }
 
-void GrassRendering::draw_billboard(Shader& sh, Mesh3D& mesh){
-	sh.setMatrix4x4Uniform("modelworld", mesh.getTransformation() );
-
-	Vector3 centerGrassToCamera = (m_camera.origin()- m_Grass.origin());
-	Vector3 projection_on_y = Vector3(centerGrassToCamera.x, 0, centerGrassToCamera.z).normalize();
-	Vector3 y_axis = Vector3(0, 1, 0);
-	Vector3 z_axis = Vector3(0, 0, 1);
-	float grassRotationAngle = acos(projection_on_y.dot(z_axis));
-	if(m_camera.origin().x < 0) {
-		grassRotationAngle = -grassRotationAngle;
-	}
-
-	m_Grass.rotateObject(y_axis, grassRotationAngle);
-	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
-	draw_object(m_meshShaderStencil, m_Grass, m_showTextureGrass);
-	m_Grass.rotateObject(y_axis, -grassRotationAngle);	
-}
-
+//SKY
 void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh)
 {
 	sh.setMatrix4x4Uniform("modelworld", mesh.getTransformation() );
@@ -603,6 +564,7 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh)
 	
 }
 
+//TERRAIN
 void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh, bool showTexture)
 {
 	sh.setMatrix4x4Uniform("modelworld", mesh.getTransformation() );
@@ -625,14 +587,13 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh, bool showTexture)
 							 mesh.getMaterial(i).m_diffuseColor.x, 
 							 mesh.getMaterial(i).m_diffuseColor.y, 
 							 mesh.getMaterial(i).m_diffuseColor.z );
-		sh.setFloatUniform("specularExp", mesh.getMaterial(i).m_specularExp);
 		if(showTexture && mesh.getMaterial(i).hasDiffuseTexture())
 		{
 			mesh.getMaterial(i).m_diffuseTexture.bind();
 			sh.setIntUniform("texture", mesh.getMaterial(i).m_diffuseTexture.getLayer());
-			if(mesh.getMaterial(i).hasAlphaTexture()){
-				mesh.getMaterial(i).m_alphaTexture.bind();
-				sh.setIntUniform("alpha", mesh.getMaterial(i).m_alphaTexture.getLayer());
+			if(mesh.getMaterial(i).hasNormalMapTexture()){
+				mesh.getMaterial(i).m_normal_mapTexture.bind();
+				sh.setIntUniform("normal_map", mesh.getMaterial(i).m_normal_mapTexture.getLayer());
 			}
 		}
 		glDrawElements( GL_TRIANGLES, mesh.getNumberOfFaces(i)*3, GL_UNSIGNED_INT, mesh.getVertexIndicesPointer(i) );

@@ -162,128 +162,161 @@ void GrassRendering::load_grass(){
 		}
 	}while(abs(m_Pattern1.origin().z)<=m_TerrainScale);
 	m_Pattern1.setTransformation(Matrix4().loadIdentity());
+
+	//calculates the min and max positions of the terrain (in x and z)
+	double minX = m_Terrain.getVertexPosition(0).x;
+	double maxX = minX;
+	double minZ = m_Terrain.getVertexPosition(0).z;
+	double maxZ = minX;
+	for(int i = 1; i < m_Terrain.getNumberOfVertices(); ++i){
+		double xPos = m_Terrain.getVertexPosition(i).x;
+		double zPos = m_Terrain.getVertexPosition(i).z;
+		if(xPos < minX) {
+			minX = xPos;
+		} else if(xPos > maxX) {
+			maxX = xPos;
+		}
+
+		if(zPos < minZ) {
+			minZ = zPos;
+		} else if(zPos > maxZ) {
+			maxZ = zPos;
+		}
+	}
+	minX = minX * m_TerrainScale;
+	maxX = maxX * m_TerrainScale;
+	minZ = minZ * m_TerrainScale;
+	maxZ = maxZ * m_TerrainScale;
+
 	//VBO
 	glBindBuffer(GL_ARRAY_BUFFER, vbo); //activation of the buffer
 	glBufferData(GL_ARRAY_BUFFER, particles.size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
 	for(int i = 0; i<(int)particles.size(); i++){
-		double data[2*6*3];
-		double dataNormals[2*6*3];
-		double dataCoords[2*6*2];
-		m_Grass.scaleObject(Vector3(m_GrassScale, m_GrassScale, m_GrassScale));
-		m_Grass.translateWorld(particles.at(i));
 
-		float arbitraryAngle = drand48() * 2 * M_PI;
-		m_Grass.rotateObject(Vector3(0,1,0), arbitraryAngle);
-		//Vertices
-		data[0] = getVertex(0, false).x;
-		data[1] = getVertex(0, false).y;
-		data[2] = getVertex(0, false).z;
-		data[3] = getVertex(2, false).x;
-		data[4] = getVertex(2, false).y;
-		data[5] = getVertex(2, false).z;
-		data[6] = getVertex(3, false).x;
-		data[7] = getVertex(3, false).y;
-		data[8] = getVertex(3, false).z;
-		data[9] = getVertex(2, false).x;
-		data[10] = getVertex(2, false).y;
-		data[11] = getVertex(2, false).z;
-		data[12] = getVertex(3, false).x;
-		data[13] = getVertex(3, false).y;
-		data[14] = getVertex(3, false).z;
-		data[15] = getVertex(1, false).x;
-		data[16] = getVertex(1, false).y;
-		data[17] = getVertex(1, false).z;
+		//draws only if on the terrain
+		double particleXpos = particles.at(i).x;
+		double particleZpos = particles.at(i).z;
+		if(particleXpos <= maxX && particleXpos >= minX && particleZpos <= maxZ && particleZpos >= minZ){
 
-		data[18] = getVertex(0, true).x;
-		data[19] = getVertex(0, true).y;
-		data[20] = getVertex(0, true).z;
-		data[21] = getVertex(2, true).x;
-		data[22] = getVertex(2, true).y;
-		data[23] = getVertex(2, true).z;
-		data[24] = getVertex(3, true).x;
-		data[25] = getVertex(3, true).y;
-		data[26] = getVertex(3, true).z;
-		data[27] = getVertex(2, true).x;
-		data[28] = getVertex(2, true).y;
-		data[29] = getVertex(2, true).z;
-		data[30] = getVertex(3, true).x;
-		data[31] = getVertex(3, true).y;
-		data[32] = getVertex(3, true).z;
-		data[33] = getVertex(1, true).x;
-		data[34] = getVertex(1, true).y;
-		data[35] = getVertex(1, true).z;
+			double data[2*6*3];
+			double dataNormals[2*6*3];
+			double dataCoords[2*6*2];
+			m_Grass.scaleObject(Vector3(m_GrassScale, m_GrassScale, m_GrassScale));
+			m_Grass.translateWorld(particles.at(i));
 
-		//Normals
-		int normalPointer = particles.size()*(2*6*3*sizeof(double));
-		dataNormals[0] = getVertexNormal(0, false).x;
-		dataNormals[1] = getVertexNormal(0, false).y;
-		dataNormals[2] = getVertexNormal(0, false).z;
-		dataNormals[3] = getVertexNormal(2, false).x;
-		dataNormals[4] = getVertexNormal(2, false).y;
-		dataNormals[5] = getVertexNormal(2, false).z;
-		dataNormals[6] = getVertexNormal(3, false).x;
-		dataNormals[7] = getVertexNormal(3, false).y;
-		dataNormals[8] = getVertexNormal(3, false).z;
-		dataNormals[9] = getVertexNormal(2, false).x;
-		dataNormals[10] = getVertexNormal(2, false).y;
-		dataNormals[11] = getVertexNormal(2, false).z;
-		dataNormals[12] = getVertexNormal(3, false).x;
-		dataNormals[13] = getVertexNormal(3, false).y;
-		dataNormals[14] = getVertexNormal(3, false).z;
-		dataNormals[15] = getVertexNormal(1, false).x;
-		dataNormals[16] = getVertexNormal(1, false).y;
-		dataNormals[17] = getVertexNormal(1, false).z;
-		dataNormals[18] = getVertexNormal(0, true).x;
-		dataNormals[19] = getVertexNormal(0, true).y;
-		dataNormals[20] = getVertexNormal(0, true).z;
-		dataNormals[21] = getVertexNormal(2, true).x;
-		dataNormals[22] = getVertexNormal(2, true).y;
-		dataNormals[23] = getVertexNormal(2, true).z;
-		dataNormals[24] = getVertexNormal(3, true).x;
-		dataNormals[25] = getVertexNormal(3, true).y;
-		dataNormals[26] = getVertexNormal(3, true).z;
-		dataNormals[27] = getVertexNormal(2, true).x;
-		dataNormals[28] = getVertexNormal(2, true).y;
-		dataNormals[29] = getVertexNormal(2, true).z;
-		dataNormals[30] = getVertexNormal(3, true).x;
-		dataNormals[31] = getVertexNormal(3, true).y;
-		dataNormals[32] = getVertexNormal(3, true).z;
-		dataNormals[33] = getVertexNormal(1, true).x;
-		dataNormals[34] = getVertexNormal(1, true).y;
-		dataNormals[35] = getVertexNormal(1, true).z;
+			float arbitraryAngle = drand48() * 2 * M_PI;
+			m_Grass.rotateObject(Vector3(0,1,0), arbitraryAngle);
+			//Vertices
+			data[0] = getVertex(0, false).x;
+			data[1] = getVertex(0, false).y;
+			data[2] = getVertex(0, false).z;
+			data[3] = getVertex(2, false).x;
+			data[4] = getVertex(2, false).y;
+			data[5] = getVertex(2, false).z;
+			data[6] = getVertex(3, false).x;
+			data[7] = getVertex(3, false).y;
+			data[8] = getVertex(3, false).z;
+			data[9] = getVertex(2, false).x;
+			data[10] = getVertex(2, false).y;
+			data[11] = getVertex(2, false).z;
+			data[12] = getVertex(3, false).x;
+			data[13] = getVertex(3, false).y;
+			data[14] = getVertex(3, false).z;
+			data[15] = getVertex(1, false).x;
+			data[16] = getVertex(1, false).y;
+			data[17] = getVertex(1, false).z;
 
-		//TexCoords
-		int texPointer = 2*normalPointer;
-		dataCoords[0] = getTexCoord(0).x;
-		dataCoords[1] = getTexCoord(0).y;
-		dataCoords[2] = getTexCoord(2).x;
-		dataCoords[3] = getTexCoord(2).y;
-		dataCoords[4] = getTexCoord(3).x;
-		dataCoords[5] = getTexCoord(3).y;
-		dataCoords[6] = getTexCoord(2).x;
-		dataCoords[7] = getTexCoord(2).y;
-		dataCoords[8] = getTexCoord(3).x;
-		dataCoords[9] = getTexCoord(3).y;
-		dataCoords[10] = getTexCoord(1).x;
-		dataCoords[11] = getTexCoord(1).y;
+			data[18] = getVertex(0, true).x;
+			data[19] = getVertex(0, true).y;
+			data[20] = getVertex(0, true).z;
+			data[21] = getVertex(2, true).x;
+			data[22] = getVertex(2, true).y;
+			data[23] = getVertex(2, true).z;
+			data[24] = getVertex(3, true).x;
+			data[25] = getVertex(3, true).y;
+			data[26] = getVertex(3, true).z;
+			data[27] = getVertex(2, true).x;
+			data[28] = getVertex(2, true).y;
+			data[29] = getVertex(2, true).z;
+			data[30] = getVertex(3, true).x;
+			data[31] = getVertex(3, true).y;
+			data[32] = getVertex(3, true).z;
+			data[33] = getVertex(1, true).x;
+			data[34] = getVertex(1, true).y;
+			data[35] = getVertex(1, true).z;
 
-		dataCoords[12] = getTexCoord(0).x;
-		dataCoords[13] = getTexCoord(0).y;
-		dataCoords[14] = getTexCoord(2).x;
-		dataCoords[15] = getTexCoord(2).y;
-		dataCoords[16] = getTexCoord(3).x;
-		dataCoords[17] = getTexCoord(3).y;
-		dataCoords[18] = getTexCoord(2).x;
-		dataCoords[19] = getTexCoord(2).y;
-		dataCoords[20] = getTexCoord(3).x;
-		dataCoords[21] = getTexCoord(3).y;
-		dataCoords[22] = getTexCoord(1).x;
-		dataCoords[23] = getTexCoord(1).y;
-		//DEMANDER AUX ASSISTANTS POUR MODULARISER
-		glBufferSubData(GL_ARRAY_BUFFER, i*2*6*3*sizeof(double), 2*6*3*sizeof(double), data);
-		glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*2*6*3*sizeof(double), 6*2*3*sizeof(double), dataNormals);
-		glBufferSubData(GL_ARRAY_BUFFER, texPointer+i*2*6*2*sizeof(double), 2*6*2*sizeof(double), dataCoords);
-		m_Grass.setTransformation(Matrix4().loadIdentity());
+			//Normals
+			int normalPointer = particles.size()*(2*6*3*sizeof(double));
+			dataNormals[0] = getVertexNormal(0, false).x;
+			dataNormals[1] = getVertexNormal(0, false).y;
+			dataNormals[2] = getVertexNormal(0, false).z;
+			dataNormals[3] = getVertexNormal(2, false).x;
+			dataNormals[4] = getVertexNormal(2, false).y;
+			dataNormals[5] = getVertexNormal(2, false).z;
+			dataNormals[6] = getVertexNormal(3, false).x;
+			dataNormals[7] = getVertexNormal(3, false).y;
+			dataNormals[8] = getVertexNormal(3, false).z;
+			dataNormals[9] = getVertexNormal(2, false).x;
+			dataNormals[10] = getVertexNormal(2, false).y;
+			dataNormals[11] = getVertexNormal(2, false).z;
+			dataNormals[12] = getVertexNormal(3, false).x;
+			dataNormals[13] = getVertexNormal(3, false).y;
+			dataNormals[14] = getVertexNormal(3, false).z;
+			dataNormals[15] = getVertexNormal(1, false).x;
+			dataNormals[16] = getVertexNormal(1, false).y;
+			dataNormals[17] = getVertexNormal(1, false).z;
+			dataNormals[18] = getVertexNormal(0, true).x;
+			dataNormals[19] = getVertexNormal(0, true).y;
+			dataNormals[20] = getVertexNormal(0, true).z;
+			dataNormals[21] = getVertexNormal(2, true).x;
+			dataNormals[22] = getVertexNormal(2, true).y;
+			dataNormals[23] = getVertexNormal(2, true).z;
+			dataNormals[24] = getVertexNormal(3, true).x;
+			dataNormals[25] = getVertexNormal(3, true).y;
+			dataNormals[26] = getVertexNormal(3, true).z;
+			dataNormals[27] = getVertexNormal(2, true).x;
+			dataNormals[28] = getVertexNormal(2, true).y;
+			dataNormals[29] = getVertexNormal(2, true).z;
+			dataNormals[30] = getVertexNormal(3, true).x;
+			dataNormals[31] = getVertexNormal(3, true).y;
+			dataNormals[32] = getVertexNormal(3, true).z;
+			dataNormals[33] = getVertexNormal(1, true).x;
+			dataNormals[34] = getVertexNormal(1, true).y;
+			dataNormals[35] = getVertexNormal(1, true).z;
+
+			//TexCoords
+			int texPointer = 2*normalPointer;
+			dataCoords[0] = getTexCoord(0).x;
+			dataCoords[1] = getTexCoord(0).y;
+			dataCoords[2] = getTexCoord(2).x;
+			dataCoords[3] = getTexCoord(2).y;
+			dataCoords[4] = getTexCoord(3).x;
+			dataCoords[5] = getTexCoord(3).y;
+			dataCoords[6] = getTexCoord(2).x;
+			dataCoords[7] = getTexCoord(2).y;
+			dataCoords[8] = getTexCoord(3).x;
+			dataCoords[9] = getTexCoord(3).y;
+			dataCoords[10] = getTexCoord(1).x;
+			dataCoords[11] = getTexCoord(1).y;
+
+			dataCoords[12] = getTexCoord(0).x;
+			dataCoords[13] = getTexCoord(0).y;
+			dataCoords[14] = getTexCoord(2).x;
+			dataCoords[15] = getTexCoord(2).y;
+			dataCoords[16] = getTexCoord(3).x;
+			dataCoords[17] = getTexCoord(3).y;
+			dataCoords[18] = getTexCoord(2).x;
+			dataCoords[19] = getTexCoord(2).y;
+			dataCoords[20] = getTexCoord(3).x;
+			dataCoords[21] = getTexCoord(3).y;
+			dataCoords[22] = getTexCoord(1).x;
+			dataCoords[23] = getTexCoord(1).y;
+			//DEMANDER AUX ASSISTANTS POUR MODULARISER
+			glBufferSubData(GL_ARRAY_BUFFER, i*2*6*3*sizeof(double), 2*6*3*sizeof(double), data);
+			glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*2*6*3*sizeof(double), 6*2*3*sizeof(double), dataNormals);
+			glBufferSubData(GL_ARRAY_BUFFER, texPointer+i*2*6*2*sizeof(double), 2*6*2*sizeof(double), dataCoords);
+			m_Grass.setTransformation(Matrix4().loadIdentity());
+			}
 		}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	m_showGrass = true;

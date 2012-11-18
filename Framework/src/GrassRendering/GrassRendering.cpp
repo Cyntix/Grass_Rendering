@@ -58,15 +58,14 @@ init()
 	daysPerMiliSecond = 1 / 180.0;
 	totalDaysElapsed = 0;
 
-	//FOR THE MOMENT, THE LIGHT HAS NO INCIDENCE IN GSLS
-	m_light.origin() = Vector3(0.0, 0.0, 0.0);
+	m_light.origin() = Vector3(5000, 5000, 5000);
 	m_recSunlightInt = 1.0;
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-	m_GrassScale = 500;
+	m_GrassScale = 250;
 	m_ParticlesScale = 4000.0;
-	m_PatternsScale = 2000;
+	m_PatternsScale = 1000;
 }
 
 
@@ -463,61 +462,32 @@ draw_scene(DrawMode _draw_mode)
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_MULTISAMPLE);
 	
-	m_meshShaderTexture.bind(); 
+	draw_sky();
 	
-	// set parameters
-	m_meshShaderTexture.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
-	m_meshShaderTexture.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
-	
-	
-	//sky
-	glDisable(GL_DEPTH_TEST);
-	m_Sky.setIdentity();
-	m_Sky.scaleObject(Vector3(m_SkyScale, m_SkyScale, m_SkyScale));
-	m_Sky.translateWorld(Vector3(m_camera.origin()));
-	m_meshShaderTexture.setMatrix4x4Uniform("modelworld", m_Sky.getTransformation() );
-	m_Sky.getMaterial(0).m_diffuseTexture.bind();
-	m_meshShaderTexture.setIntUniform("texture", m_Sky.getMaterial(0).m_diffuseTexture.getLayer());
-	draw_object(m_meshShaderTexture, m_Sky);
-	glEnable(GL_DEPTH_TEST);	
-
-	m_meshShaderTexture.unbind();
-	
-	//-------------------------------
-	
-	m_meshShaderDiffuse.bind();
-	m_meshShaderDiffuse.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
-	m_meshShaderDiffuse.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
-	m_meshShaderDiffuse.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
-	m_meshShaderDiffuse.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
-	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
-	draw_object(m_meshShaderDiffuse, m_Terrain, m_showTextureTerrain);
-	m_meshShaderDiffuse.unbind();
-
-	m_meshShaderStencil.bind();
-	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
-	m_meshShaderStencil.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
-	m_meshShaderStencil.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
-	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
+	draw_terrain(m_showTextureTerrain);
 
 	draw_buffer(m_meshShaderStencil, m_showTextureTerrain);
-
-	m_meshShaderStencil.unbind();
 
 }
 
 void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
+	m_meshShaderStencil.bind();
+
+	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
+	m_meshShaderStencil.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
+	m_meshShaderStencil.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
+	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
+	sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
+	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
+	m_meshShaderStencil.setFloatUniform("direction", direction);
+	sh.setIntUniform("useAlphaToCoverage", m_showAlphaToCoverage);
+
 	if(m_showGrass){
 		if(m_showAlphaToCoverage){
 			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
-
-		sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
-		m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
-		m_meshShaderStencil.setFloatUniform("direction", direction);
-		sh.setIntUniform("useAlphaToCoverage", m_showAlphaToCoverage);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
@@ -571,70 +541,90 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
 		}
 	}
+
+	m_meshShaderStencil.unbind();
 }
 
 //SKY
-void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh)
+void GrassRendering::draw_sky()
 {
-	sh.setMatrix4x4Uniform("modelworld", mesh.getTransformation() );
-	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", mesh.getTransformation().Inverse().Transpose());
+	m_meshShaderTexture.bind();
+	glDisable(GL_DEPTH_TEST);
+
+	m_Sky.setIdentity();
+	m_Sky.scaleObject(Vector3(m_SkyScale, m_SkyScale, m_SkyScale));
+	m_Sky.translateWorld(Vector3(m_camera.origin()));
+	m_Sky.getMaterial(0).m_diffuseTexture.bind();
+	m_meshShaderTexture.setMatrix4x4Uniform("modelworld", m_Sky.getTransformation() );
+	m_meshShaderTexture.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
+	m_meshShaderTexture.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
+	m_meshShaderTexture.setIntUniform("texture", m_Sky.getMaterial(0).m_diffuseTexture.getLayer());
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	
-	glVertexPointer( 3, GL_DOUBLE, 0, mesh.getVertexPointer() );
-	glNormalPointer( GL_DOUBLE, 0, mesh.getNormalPointer() );
-	glTexCoordPointer( 2, GL_DOUBLE, 0, mesh.getUvTextureCoordPointer() );
+	glVertexPointer( 3, GL_DOUBLE, 0, m_Sky.getVertexPointer() );
+	glNormalPointer( GL_DOUBLE, 0, m_Sky.getNormalPointer() );
+	glTexCoordPointer( 2, GL_DOUBLE, 0, m_Sky.getUvTextureCoordPointer() );
 	
-	for(unsigned int i = 0; i < mesh.getNumberOfParts(); i++)
+	for(unsigned int i = 0; i < m_Sky.getNumberOfParts(); i++)
 	{
-		glDrawElements( GL_TRIANGLES, mesh.getNumberOfFaces(i)*3, GL_UNSIGNED_INT, mesh.getVertexIndicesPointer(i) );
+		glDrawElements( GL_TRIANGLES, m_Sky.getNumberOfFaces(i)*3, GL_UNSIGNED_INT, m_Sky.getVertexIndicesPointer(i) );
 	}
 	cout<<"\n";
 	
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	
+
+	glEnable(GL_DEPTH_TEST);	
+	m_meshShaderTexture.unbind();	
 }
 
 //TERRAIN
-void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh, bool showTexture)
+void GrassRendering::draw_terrain(bool showTexture)
 {
-	sh.setMatrix4x4Uniform("modelworld", mesh.getTransformation() );
-	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", mesh.getTransformation().Inverse().Transpose());
+	m_meshShaderDiffuse.bind();
+
+	m_meshShaderDiffuse.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
+	m_meshShaderDiffuse.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
+	m_meshShaderDiffuse.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
+	m_meshShaderDiffuse.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
+	m_meshShaderDiffuse.setMatrix4x4Uniform("modelworld", m_Terrain.getTransformation());
+	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
+	m_meshShaderDiffuse.setVector3Uniform("lightPosition", m_light.origin().x, m_light.origin().y, m_light.origin().z);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	if(showTexture)
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 			
-	glVertexPointer( 3, GL_DOUBLE, 0, mesh.getVertexPointer() );
-	glNormalPointer( GL_DOUBLE, 0, mesh.getNormalPointer() );
+	glVertexPointer( 3, GL_DOUBLE, 0, m_Terrain.getVertexPointer() );
+	glNormalPointer( GL_DOUBLE, 0, m_Terrain.getNormalPointer() );
 	if(showTexture)
-		glTexCoordPointer( 2, GL_DOUBLE, 0, mesh.getUvTextureCoordPointer() );
+		glTexCoordPointer( 2, GL_DOUBLE, 0, m_Terrain.getUvTextureCoordPointer() );
 			
-	for(unsigned int i = 0; i < mesh.getNumberOfParts(); i++)
+	for(unsigned int i = 0; i < m_Terrain.getNumberOfParts(); i++)
 	{
-		sh.setIntUniform("useTexture", showTexture && mesh.getMaterial(i).hasDiffuseTexture());
-		sh.setVector3Uniform("diffuseColor", 
-							 mesh.getMaterial(i).m_diffuseColor.x, 
-							 mesh.getMaterial(i).m_diffuseColor.y, 
-							 mesh.getMaterial(i).m_diffuseColor.z );
-		if(showTexture && mesh.getMaterial(i).hasDiffuseTexture())
+		m_meshShaderDiffuse.setIntUniform("useTexture", showTexture && m_Terrain.getMaterial(i).hasDiffuseTexture());
+		m_meshShaderDiffuse.setVector3Uniform("diffuseColor", 
+							 m_Terrain.getMaterial(i).m_diffuseColor.x, 
+							 m_Terrain.getMaterial(i).m_diffuseColor.y, 
+							 m_Terrain.getMaterial(i).m_diffuseColor.z );
+		if(showTexture && m_Terrain.getMaterial(i).hasDiffuseTexture())
 		{
-			mesh.getMaterial(i).m_diffuseTexture.bind();
-			sh.setIntUniform("texture", mesh.getMaterial(i).m_diffuseTexture.getLayer());
-			if(mesh.getMaterial(i).hasNormalMapTexture()){
-				mesh.getMaterial(i).m_normal_mapTexture.bind();
-				sh.setIntUniform("normal_map", mesh.getMaterial(i).m_normal_mapTexture.getLayer());
+			m_Terrain.getMaterial(i).m_diffuseTexture.bind();
+			m_meshShaderDiffuse.setIntUniform("texture", m_Terrain.getMaterial(i).m_diffuseTexture.getLayer());
+			if(m_Terrain.getMaterial(i).hasNormalMapTexture()){
+				m_Terrain.getMaterial(i).m_normal_mapTexture.bind();
+				m_meshShaderDiffuse.setIntUniform("normal_map", m_Terrain.getMaterial(i).m_normal_mapTexture.getLayer());
 			}
 		}
-		glDrawElements( GL_TRIANGLES, mesh.getNumberOfFaces(i)*3, GL_UNSIGNED_INT, mesh.getVertexIndicesPointer(i) );
-		if(showTexture && mesh.getMaterial(i).hasDiffuseTexture())
+		glDrawElements( GL_TRIANGLES, m_Terrain.getNumberOfFaces(i)*3, GL_UNSIGNED_INT, m_Terrain.getVertexIndicesPointer(i) );
+		if(showTexture && m_Terrain.getMaterial(i).hasDiffuseTexture())
 		{
-			mesh.getMaterial(i).m_diffuseTexture.unbind();
-			mesh.getMaterial(i).m_alphaTexture.unbind();
+			m_Terrain.getMaterial(i).m_diffuseTexture.unbind();
+			m_Terrain.getMaterial(i).m_alphaTexture.unbind();
 		}
 	}
 			
@@ -643,6 +633,7 @@ void GrassRendering::draw_object(Shader& sh, Mesh3D& mesh, bool showTexture)
 	if(showTexture)
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	
+	m_meshShaderDiffuse.unbind();
 }
 
 

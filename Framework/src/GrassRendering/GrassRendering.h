@@ -61,10 +61,9 @@ protected:
 	
 	virtual void draw_scene(DrawMode _draw_mode);
 
-	void draw_billboard(Shader& sh, Mesh3D& mesh);
 	void draw_buffer(Shader& sh, boolean showTexture);
-    void draw_object(Shader& sh, Mesh3D& mesh);
-	void draw_object(Shader& sh, Mesh3D& mesh, bool showTexture);
+    void draw_sky();
+	void draw_terrain(bool showTexture);
 
 	Vector3 GrassRendering::getVertex(int i, boolean rotation);
 	Vector3 GrassRendering::getVertexNormal(int i, boolean rotation);
@@ -108,8 +107,6 @@ protected:
 	float m_GrassScale;
 	float m_ParticlesScale;
 	float m_PatternsScale;
-	
-	//translation factors
 	
 	//timer
 	StopWatch watch;

@@ -9,11 +9,9 @@ uniform vec3 cameraPos;
 uniform vec3 lightcolor;
 		
 void main()
-{	
-	//Exercise 4.4: Calculate the reflected intensities for the direct sun light (using lightDir and lightcolor) 
-	//and indirect light (using indirectLightDir and indirectlightcolor)
-		
+{			
 	vec4 finalcolor = vec4(0.0, 0.0, 0.0, 0.0);
+	vec3 finalNormal = normal;
 	
 	vec3 color = diffuseColor;
     vec3 normalColor = vec3(0, 0, 0);
@@ -21,14 +19,15 @@ void main()
     {
         color = texture2D(texture, gl_TexCoord[0].xy).xyz * color;
         normalColor = texture2D(normal_map, gl_TexCoord[0].xy).xyz;
+		finalNormal = normalize(vec3(normal.x + normalColor.x, normal.y + normalColor.y, normal.z + normalColor.z));
     }
-    color = color*lightcolor*max(0.0, dot(normal, lightDir));
+    color = color*lightcolor*max(0.0, dot(finalNormal, lightDir));
 
     //specular
     vec3 vVec = normalize(eyeVec);
     double specular = pow(clamp(dot(reflect(-lightDir, normalColor), vVec), 0.0, 1.0), 10);
-	//also add a small ambient term
-	finalcolor += vec4(color, 1.0) + vec4(specular, specular, specular, 1.0)*0.1 + vec4(diffuseColor, 1.0)*0.1;	
+
+	finalcolor += vec4(color + vec3(specular, specular, specular)*0.1 + diffuseColor*0.1, 1.0);	
 
 	gl_FragColor = finalcolor;
 }

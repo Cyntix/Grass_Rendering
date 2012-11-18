@@ -3,19 +3,18 @@ uniform mat4 worldcamera;
 uniform mat4 projection;
 uniform mat3 worldcameraNormal;
 uniform mat3 modelworldNormal;
+uniform vec3 lightPosition;
 
 varying vec3 normal, lightDir, eyeVec;
 
 void main()
 {	  
-	// transform normal to camera coordinates
+	vec3 vertex = vec3( worldcamera * modelworld * gl_Vertex );
+	
 	normal = normalize( worldcameraNormal * modelworldNormal * gl_Normal );
 	
-	//TO MODIFY LATER
-	vec3 lightpositionCamera = vec3( 1.0, 1.0, 1.0 );
+	vec3 lightpositionCamera = vec3(worldcamera*vec4(lightPosition, 1.0));
 
-	// varying
-	vec3 vertex = vec3( worldcamera * modelworld * gl_Vertex );
 	lightDir = normalize(lightpositionCamera-vertex);
 	eyeVec = -vertex;
 

@@ -43,7 +43,8 @@ init()
 	direction = 0;
 	up = true;
 
-	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &vboGrass);
+	glGenBuffers(1, &vboFlowers);
 
 	// load mesh shader
 	m_meshShaderDiffuse.create("diffuse.vs", "diffuse.fs");
@@ -51,7 +52,9 @@ init()
 	m_meshShaderStencil.create("stencil.vs", "stencil.fs");
 
 	m_showTextureSky = false;
-	
+	m_showGrass = true;
+	m_showAlphaToCoverage = true;
+
 	currentTime = 0.0;
 	isWatchOn = false;
 	
@@ -64,8 +67,8 @@ init()
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
 	m_GrassScale = 250;
-	m_ParticlesScale = 4000.0;
 	m_PatternsScale = 1000;
+	m_FlowerScale = 150;
 }
 
 
@@ -123,44 +126,55 @@ load_mesh(const std::string& filenameObj, MeshType type)
 				m_Grass.calculateVertexNormals();
 			
 			m_showTextureGrass = m_Grass.hasUvTextureCoord();
+
 			break;
 		case PARTICLE_PATTERN:{
 			// load mesh from obj
-			Mesh3DReader::read( filenameObj, m_Pattern1);
+			Mesh3DReader::read( filenameObj, m_Pattern);
 			
 			// calculate normals
-			if(!m_Pattern1.hasNormals())
-				m_Pattern1.calculateVertexNormals();
-			
-			m_Pattern1.scaleObject(Vector3(m_PatternsScale, m_PatternsScale, m_PatternsScale));
+			if(!m_Pattern.hasNormals())
+				m_Pattern.calculateVertexNormals();
 			break;
 		}
+		case FLOWER:
+			// load mesh from obj
+			Mesh3DReader::read( filenameObj, m_Flower);
+			
+			// calculate normals
+			if(!m_Flower.hasNormals())
+				m_Flower.calculateVertexNormals();
+			
+			m_showTextureFlowers = m_Flower.hasUvTextureCoord();
+			break;
 		default:
 			break;
 	}	
 }
 
-void GrassRendering::load_grass(){
+void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale){
 	Vector3 starting_point = m_Terrain.origin();
 	starting_point.x = starting_point.x-m_TerrainScale;
 	starting_point.z = starting_point.z-m_TerrainScale;
 
-	m_Pattern1.translateWorld(starting_point);
+
+	m_Pattern.scaleObject(Vector3(m_PatternsScale, m_PatternsScale, m_PatternsScale));
+	m_Pattern.translateWorld(starting_point);
 	int x_gone = 0;
 	do{
-		cout<<"Creation of the blind of grass on position: (" << m_Pattern1.origin().x << ", " << m_Pattern1.origin().y << ", " << m_Pattern1.origin().z << ")...\n";
-		for(int i = 0; i<m_Pattern1.getNumberOfVertices(); i++){
-			particles.push_back(m_Pattern1.getTransformation() * m_Pattern1.getVertexPosition(i));
+		cout<<"Creation of billboard on position: (" << m_Pattern.origin().x << ", " << m_Pattern.origin().y << ", " << m_Pattern.origin().z << ")...\n";
+		for(int i = 0; i<m_Pattern.getNumberOfVertices(); i++){
+			(*particles).push_back(m_Pattern.getTransformation() * m_Pattern.getVertexPosition(i));
 		}
-		if(m_Pattern1.origin().x<=m_TerrainScale){			
-			m_Pattern1.translateWorld(Vector3(m_PatternsScale, 0, 0));
+		if(m_Pattern.origin().x<=m_TerrainScale){			
+			m_Pattern.translateWorld(Vector3(m_PatternsScale, 0, 0));
 			x_gone += m_PatternsScale;
 		}else {
-			m_Pattern1.translateWorld(Vector3(-x_gone, 0, m_PatternsScale));
+			m_Pattern.translateWorld(Vector3(-x_gone, 0, m_PatternsScale));
 			x_gone = 0;
 		}
-	}while(abs(m_Pattern1.origin().z)<=m_TerrainScale);
-	m_Pattern1.setTransformation(Matrix4().loadIdentity());
+	}while(abs(m_Pattern.origin().z)<=m_TerrainScale);
+	m_Pattern.setTransformation(Matrix4().loadIdentity());
 
 	//calculates the min and max positions of the terrain (in x and z)
 	double minX = m_Terrain.getVertexPosition(0).x;
@@ -188,166 +202,176 @@ void GrassRendering::load_grass(){
 	maxZ = maxZ * m_TerrainScale;
 
 	//VBO
-	glBindBuffer(GL_ARRAY_BUFFER, vbo); //activation of the buffer
-	glBufferData(GL_ARRAY_BUFFER, particles.size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
-	for(int i = 0; i<(int)particles.size(); i++){
+	glBindBuffer(GL_ARRAY_BUFFER, *vbo); //activation of the buffer
+	glBufferData(GL_ARRAY_BUFFER, (*particles).size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
+	for(int i = 0; i<(int)(*particles).size(); i++){
 
 		//draws only if on the terrain
-		double particleXpos = particles.at(i).x;
-		double particleZpos = particles.at(i).z;
+		double particleXpos = (*particles).at(i).x;
+		double particleZpos = (*particles).at(i).z;
 		if(particleXpos <= maxX && particleXpos >= minX && particleZpos <= maxZ && particleZpos >= minZ){
 
 			double data[2*6*3];
 			double dataNormals[2*6*3];
 			double dataCoords[2*6*2];
-			m_Grass.scaleObject(Vector3(m_GrassScale, m_GrassScale, m_GrassScale));
-			m_Grass.translateWorld(particles.at(i));
+			(*mesh).scaleObject(Vector3(scale, scale, scale));
+			(*mesh).translateWorld((*particles).at(i));
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
-			m_Grass.rotateObject(Vector3(0,1,0), arbitraryAngle);
+			(*mesh).rotateObject(Vector3(0,1,0), arbitraryAngle);
 			//Vertices
-			data[0] = getVertex(0, false).x;
-			data[1] = getVertex(0, false).y;
-			data[2] = getVertex(0, false).z;
-			data[3] = getVertex(2, false).x;
-			data[4] = getVertex(2, false).y;
-			data[5] = getVertex(2, false).z;
-			data[6] = getVertex(3, false).x;
-			data[7] = getVertex(3, false).y;
-			data[8] = getVertex(3, false).z;
-			data[9] = getVertex(2, false).x;
-			data[10] = getVertex(2, false).y;
-			data[11] = getVertex(2, false).z;
-			data[12] = getVertex(3, false).x;
-			data[13] = getVertex(3, false).y;
-			data[14] = getVertex(3, false).z;
-			data[15] = getVertex(1, false).x;
-			data[16] = getVertex(1, false).y;
-			data[17] = getVertex(1, false).z;
+			data[0] = getVertex(mesh, 0, false).x;
+			data[1] = getVertex(mesh, 0, false).y;
+			data[2] = getVertex(mesh, 0, false).z;
+			data[3] = getVertex(mesh, 2, false).x;
+			data[4] = getVertex(mesh, 2, false).y;
+			data[5] = getVertex(mesh, 2, false).z;
+			data[6] = getVertex(mesh, 3, false).x;
+			data[7] = getVertex(mesh, 3, false).y;
+			data[8] = getVertex(mesh, 3, false).z;
+			data[9] = getVertex(mesh, 2, false).x;
+			data[10] = getVertex(mesh, 2, false).y;
+			data[11] = getVertex(mesh, 2, false).z;
+			data[12] = getVertex(mesh, 3, false).x;
+			data[13] = getVertex(mesh, 3, false).y;
+			data[14] = getVertex(mesh, 3, false).z;
+			data[15] = getVertex(mesh, 1, false).x;
+			data[16] = getVertex(mesh, 1, false).y;
+			data[17] = getVertex(mesh, 1, false).z;
 
-			data[18] = getVertex(0, true).x;
-			data[19] = getVertex(0, true).y;
-			data[20] = getVertex(0, true).z;
-			data[21] = getVertex(2, true).x;
-			data[22] = getVertex(2, true).y;
-			data[23] = getVertex(2, true).z;
-			data[24] = getVertex(3, true).x;
-			data[25] = getVertex(3, true).y;
-			data[26] = getVertex(3, true).z;
-			data[27] = getVertex(2, true).x;
-			data[28] = getVertex(2, true).y;
-			data[29] = getVertex(2, true).z;
-			data[30] = getVertex(3, true).x;
-			data[31] = getVertex(3, true).y;
-			data[32] = getVertex(3, true).z;
-			data[33] = getVertex(1, true).x;
-			data[34] = getVertex(1, true).y;
-			data[35] = getVertex(1, true).z;
+			data[18] = getVertex(mesh, 0, true).x;
+			data[19] = getVertex(mesh, 0, true).y;
+			data[20] = getVertex(mesh, 0, true).z;
+			data[21] = getVertex(mesh, 2, true).x;
+			data[22] = getVertex(mesh, 2, true).y;
+			data[23] = getVertex(mesh, 2, true).z;
+			data[24] = getVertex(mesh, 3, true).x;
+			data[25] = getVertex(mesh, 3, true).y;
+			data[26] = getVertex(mesh, 3, true).z;
+			data[27] = getVertex(mesh, 2, true).x;
+			data[28] = getVertex(mesh, 2, true).y;
+			data[29] = getVertex(mesh, 2, true).z;
+			data[30] = getVertex(mesh, 3, true).x;
+			data[31] = getVertex(mesh, 3, true).y;
+			data[32] = getVertex(mesh, 3, true).z;
+			data[33] = getVertex(mesh, 1, true).x;
+			data[34] = getVertex(mesh, 1, true).y;
+			data[35] = getVertex(mesh, 1, true).z;
 
 			//Normals
-			int normalPointer = particles.size()*(2*6*3*sizeof(double));
-			dataNormals[0] = getVertexNormal(0, false).x;
-			dataNormals[1] = getVertexNormal(0, false).y;
-			dataNormals[2] = getVertexNormal(0, false).z;
-			dataNormals[3] = getVertexNormal(2, false).x;
-			dataNormals[4] = getVertexNormal(2, false).y;
-			dataNormals[5] = getVertexNormal(2, false).z;
-			dataNormals[6] = getVertexNormal(3, false).x;
-			dataNormals[7] = getVertexNormal(3, false).y;
-			dataNormals[8] = getVertexNormal(3, false).z;
-			dataNormals[9] = getVertexNormal(2, false).x;
-			dataNormals[10] = getVertexNormal(2, false).y;
-			dataNormals[11] = getVertexNormal(2, false).z;
-			dataNormals[12] = getVertexNormal(3, false).x;
-			dataNormals[13] = getVertexNormal(3, false).y;
-			dataNormals[14] = getVertexNormal(3, false).z;
-			dataNormals[15] = getVertexNormal(1, false).x;
-			dataNormals[16] = getVertexNormal(1, false).y;
-			dataNormals[17] = getVertexNormal(1, false).z;
-			dataNormals[18] = getVertexNormal(0, true).x;
-			dataNormals[19] = getVertexNormal(0, true).y;
-			dataNormals[20] = getVertexNormal(0, true).z;
-			dataNormals[21] = getVertexNormal(2, true).x;
-			dataNormals[22] = getVertexNormal(2, true).y;
-			dataNormals[23] = getVertexNormal(2, true).z;
-			dataNormals[24] = getVertexNormal(3, true).x;
-			dataNormals[25] = getVertexNormal(3, true).y;
-			dataNormals[26] = getVertexNormal(3, true).z;
-			dataNormals[27] = getVertexNormal(2, true).x;
-			dataNormals[28] = getVertexNormal(2, true).y;
-			dataNormals[29] = getVertexNormal(2, true).z;
-			dataNormals[30] = getVertexNormal(3, true).x;
-			dataNormals[31] = getVertexNormal(3, true).y;
-			dataNormals[32] = getVertexNormal(3, true).z;
-			dataNormals[33] = getVertexNormal(1, true).x;
-			dataNormals[34] = getVertexNormal(1, true).y;
-			dataNormals[35] = getVertexNormal(1, true).z;
+			int normalPointer = (*particles).size()*(2*6*3*sizeof(double));
+			dataNormals[0] = getVertexNormal(mesh, 0, false).x;
+			dataNormals[1] = getVertexNormal(mesh, 0, false).y;
+			dataNormals[2] = getVertexNormal(mesh, 0, false).z;
+			dataNormals[3] = getVertexNormal(mesh, 2, false).x;
+			dataNormals[4] = getVertexNormal(mesh, 2, false).y;
+			dataNormals[5] = getVertexNormal(mesh, 2, false).z;
+			dataNormals[6] = getVertexNormal(mesh, 3, false).x;
+			dataNormals[7] = getVertexNormal(mesh, 3, false).y;
+			dataNormals[8] = getVertexNormal(mesh, 3, false).z;
+			dataNormals[9] = getVertexNormal(mesh, 2, false).x;
+			dataNormals[10] = getVertexNormal(mesh, 2, false).y;
+			dataNormals[11] = getVertexNormal(mesh, 2, false).z;
+			dataNormals[12] = getVertexNormal(mesh, 3, false).x;
+			dataNormals[13] = getVertexNormal(mesh, 3, false).y;
+			dataNormals[14] = getVertexNormal(mesh, 3, false).z;
+			dataNormals[15] = getVertexNormal(mesh, 1, false).x;
+			dataNormals[16] = getVertexNormal(mesh, 1, false).y;
+			dataNormals[17] = getVertexNormal(mesh, 1, false).z;
+			dataNormals[18] = getVertexNormal(mesh, 0, true).x;
+			dataNormals[19] = getVertexNormal(mesh, 0, true).y;
+			dataNormals[20] = getVertexNormal(mesh, 0, true).z;
+			dataNormals[21] = getVertexNormal(mesh, 2, true).x;
+			dataNormals[22] = getVertexNormal(mesh, 2, true).y;
+			dataNormals[23] = getVertexNormal(mesh, 2, true).z;
+			dataNormals[24] = getVertexNormal(mesh, 3, true).x;
+			dataNormals[25] = getVertexNormal(mesh, 3, true).y;
+			dataNormals[26] = getVertexNormal(mesh, 3, true).z;
+			dataNormals[27] = getVertexNormal(mesh, 2, true).x;
+			dataNormals[28] = getVertexNormal(mesh, 2, true).y;
+			dataNormals[29] = getVertexNormal(mesh, 2, true).z;
+			dataNormals[30] = getVertexNormal(mesh, 3, true).x;
+			dataNormals[31] = getVertexNormal(mesh, 3, true).y;
+			dataNormals[32] = getVertexNormal(mesh, 3, true).z;
+			dataNormals[33] = getVertexNormal(mesh, 1, true).x;
+			dataNormals[34] = getVertexNormal(mesh, 1, true).y;
+			dataNormals[35] = getVertexNormal(mesh, 1, true).z;
 
 			//TexCoords
 			int texPointer = 2*normalPointer;
-			dataCoords[0] = getTexCoord(0).x;
-			dataCoords[1] = getTexCoord(0).y;
-			dataCoords[2] = getTexCoord(2).x;
-			dataCoords[3] = getTexCoord(2).y;
-			dataCoords[4] = getTexCoord(3).x;
-			dataCoords[5] = getTexCoord(3).y;
-			dataCoords[6] = getTexCoord(2).x;
-			dataCoords[7] = getTexCoord(2).y;
-			dataCoords[8] = getTexCoord(3).x;
-			dataCoords[9] = getTexCoord(3).y;
-			dataCoords[10] = getTexCoord(1).x;
-			dataCoords[11] = getTexCoord(1).y;
+			dataCoords[0] = getTexCoord(mesh, 0).x;
+			dataCoords[1] = getTexCoord(mesh, 0).y;
+			dataCoords[2] = getTexCoord(mesh, 2).x;
+			dataCoords[3] = getTexCoord(mesh, 2).y;
+			dataCoords[4] = getTexCoord(mesh, 3).x;
+			dataCoords[5] = getTexCoord(mesh, 3).y;
+			dataCoords[6] = getTexCoord(mesh, 2).x;
+			dataCoords[7] = getTexCoord(mesh, 2).y;
+			dataCoords[8] = getTexCoord(mesh, 3).x;
+			dataCoords[9] = getTexCoord(mesh, 3).y;
+			dataCoords[10] = getTexCoord(mesh, 1).x;
+			dataCoords[11] = getTexCoord(mesh, 1).y;
 
-			dataCoords[12] = getTexCoord(0).x;
-			dataCoords[13] = getTexCoord(0).y;
-			dataCoords[14] = getTexCoord(2).x;
-			dataCoords[15] = getTexCoord(2).y;
-			dataCoords[16] = getTexCoord(3).x;
-			dataCoords[17] = getTexCoord(3).y;
-			dataCoords[18] = getTexCoord(2).x;
-			dataCoords[19] = getTexCoord(2).y;
-			dataCoords[20] = getTexCoord(3).x;
-			dataCoords[21] = getTexCoord(3).y;
-			dataCoords[22] = getTexCoord(1).x;
-			dataCoords[23] = getTexCoord(1).y;
+			dataCoords[12] = getTexCoord(mesh, 0).x;
+			dataCoords[13] = getTexCoord(mesh, 0).y;
+			dataCoords[14] = getTexCoord(mesh, 2).x;
+			dataCoords[15] = getTexCoord(mesh, 2).y;
+			dataCoords[16] = getTexCoord(mesh, 3).x;
+			dataCoords[17] = getTexCoord(mesh, 3).y;
+			dataCoords[18] = getTexCoord(mesh, 2).x;
+			dataCoords[19] = getTexCoord(mesh, 2).y;
+			dataCoords[20] = getTexCoord(mesh, 3).x;
+			dataCoords[21] = getTexCoord(mesh, 3).y;
+			dataCoords[22] = getTexCoord(mesh, 1).x;
+			dataCoords[23] = getTexCoord(mesh, 1).y;
 			//DEMANDER AUX ASSISTANTS POUR MODULARISER
 			glBufferSubData(GL_ARRAY_BUFFER, i*2*6*3*sizeof(double), 2*6*3*sizeof(double), data);
 			glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*2*6*3*sizeof(double), 6*2*3*sizeof(double), dataNormals);
 			glBufferSubData(GL_ARRAY_BUFFER, texPointer+i*2*6*2*sizeof(double), 2*6*2*sizeof(double), dataCoords);
-			m_Grass.setTransformation(Matrix4().loadIdentity());
+			(*mesh).setTransformation(Matrix4().loadIdentity());
 			}
 		}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	m_showGrass = true;
-	m_showAlphaToCoverage = true;
 }
 
-Vector3 GrassRendering::getVertex(int i, boolean cross){
-	Vector3 vertexObject = m_Grass.getVertexPosition(i);
+void GrassRendering::load_grass(){
+	cout<<"Generation of grass:\n";
+	load_particles(&vboGrass, &grass_particles, &m_Grass, m_GrassScale);
+	cout<<"\n\n";
+}
+
+void GrassRendering::load_flowers(){
+	cout<<"Generation of flowers:\n";
+	m_PatternsScale = 4000;
+	load_particles(&vboFlowers, &flowers_particles, &m_Flower, m_FlowerScale);
+}
+
+Vector3 GrassRendering::getVertex(Mesh3D* mesh, int i, boolean cross){
+	Vector3 vertexObject = (*mesh).getVertexPosition(i);
 	if(cross){
-		m_Grass.rotateObject(Vector3(0, 1, 0), M_PI/2);
+		(*mesh).rotateObject(Vector3(0, 1, 0), M_PI/2);
 	}
-	Matrix4 trans = m_Grass.getTransformation();
+	Matrix4 trans = (*mesh).getTransformation();
 	if(cross){
-		m_Grass.rotateObject(Vector3(0, 1, 0), -M_PI/2);
+		(*mesh).rotateObject(Vector3(0, 1, 0), -M_PI/2);
 	}
 	return trans*vertexObject;
 }
 
-Vector3 GrassRendering::getVertexNormal(int i, boolean cross){
-	Vector3 vertexNormal = m_Grass.getVertexNormal(i);
+Vector3 GrassRendering::getVertexNormal(Mesh3D* mesh, int i, boolean cross){
+	Vector3 vertexNormal = (*mesh).getVertexNormal(i);
 	if(cross){
-		m_Grass.rotateObject(Vector3(0, 1, 0), M_PI/2);
+		(*mesh).rotateObject(Vector3(0, 1, 0), M_PI/2);
 	}
-	Matrix4 trans = m_Grass.getTransformation();
+	Matrix4 trans = (*mesh).getTransformation();
 	if(cross){
-		m_Grass.rotateObject(Vector3(0, 1, 0), -M_PI/2);
+		(*mesh).rotateObject(Vector3(0, 1, 0), -M_PI/2);
 	}
 	return trans*vertexNormal;
 }
 
-Vector2 GrassRendering::getTexCoord(int i){
-	return m_Grass.getVertexUVs(i);
+Vector2 GrassRendering::getTexCoord(Mesh3D* mesh, int i){
+	return (*mesh).getVertexUVs(i);
 }
 
 
@@ -369,6 +393,9 @@ keyboard(int key, int x, int y)
 
 			m_showTextureGrass = !m_showTextureGrass;
 			if(!m_Grass.hasUvTextureCoord()) m_showTextureGrass = false;
+
+			m_showTextureFlowers = !m_showTextureFlowers;
+			if(!m_Grass.hasUvTextureCoord()) m_showTextureFlowers = false;
 			break;
 		case 'g':
 			m_showGrass = !m_showGrass;
@@ -466,19 +493,27 @@ draw_scene(DrawMode _draw_mode)
 	
 	draw_terrain(m_showTextureTerrain);
 
-	draw_buffer(m_meshShaderStencil, m_showTextureTerrain);
-
+	draw_grass();
+	draw_flowers();
 }
 
-void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
+void GrassRendering::draw_grass(){
+	draw_buffer(m_meshShaderStencil, vboGrass, &m_Grass, &grass_particles, m_showTextureGrass);
+}
+
+void GrassRendering::draw_flowers(){
+	draw_buffer(m_meshShaderStencil, vboFlowers, &m_Flower, &flowers_particles , m_showTextureFlowers);
+}
+
+void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture){
 	m_meshShaderStencil.bind();
 
 	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
 	m_meshShaderStencil.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
 	m_meshShaderStencil.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
 	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
-	sh.setMatrix4x4Uniform("modelworld", m_Grass.getTransformation());	
-	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", m_Grass.getTransformation().Inverse().Transpose());
+	sh.setMatrix4x4Uniform("modelworld", (*mesh).getTransformation());	
+	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", (*mesh).getTransformation().Inverse().Transpose());
 	m_meshShaderStencil.setFloatUniform("direction", direction);
 	sh.setIntUniform("useAlphaToCoverage", m_showAlphaToCoverage);
 
@@ -498,35 +533,35 @@ void GrassRendering::draw_buffer(Shader& sh, boolean showTexture){
 		}
 	
 		glVertexPointer(3, GL_DOUBLE, 0, BUFFER_OFFSET(0));
-		glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET(particles.size()*(2*6*3*sizeof(double))));
+		glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET((*particles).size()*(2*6*3*sizeof(double))));
 		if(showTexture){
-			glTexCoordPointer(2, GL_DOUBLE, 0, BUFFER_OFFSET(2*particles.size()*(2*6*3*sizeof(double))));
+			glTexCoordPointer(2, GL_DOUBLE, 0, BUFFER_OFFSET(2*(*particles).size()*(2*6*3*sizeof(double))));
 		}
 
-		sh.setIntUniform("useTexture", showTexture && m_Grass.getMaterial().hasDiffuseTexture());
+		sh.setIntUniform("useTexture", showTexture && (*mesh).getMaterial().hasDiffuseTexture());
 			sh.setVector3Uniform("diffuseColor", 
-								 m_Grass.getMaterial().m_diffuseColor.x, 
-								 m_Grass.getMaterial().m_diffuseColor.y, 
-								 m_Grass.getMaterial().m_diffuseColor.z );
-			sh.setFloatUniform("specularExp", m_Grass.getMaterial().m_specularExp);
+								 (*mesh).getMaterial().m_diffuseColor.x, 
+								 (*mesh).getMaterial().m_diffuseColor.y, 
+								 (*mesh).getMaterial().m_diffuseColor.z );
+			sh.setFloatUniform("specularExp", (*mesh).getMaterial().m_specularExp);
 
-		if(showTexture && m_Grass.getMaterial().hasDiffuseTexture())
+		if(showTexture && (*mesh).getMaterial().hasDiffuseTexture())
 			{
-				m_Grass.getMaterial().m_diffuseTexture.bind();
-				sh.setIntUniform("texture", m_Grass.getMaterial().m_diffuseTexture.getLayer());
-				if(m_Grass.getMaterial().hasAlphaTexture()){
-					m_Grass.getMaterial().m_alphaTexture.bind();
-					sh.setIntUniform("alpha", m_Grass.getMaterial().m_alphaTexture.getLayer());
+				(*mesh).getMaterial().m_diffuseTexture.bind();
+				sh.setIntUniform("texture", (*mesh).getMaterial().m_diffuseTexture.getLayer());
+				if((*mesh).getMaterial().hasAlphaTexture()){
+					(*mesh).getMaterial().m_alphaTexture.bind();
+					sh.setIntUniform("alpha", (*mesh).getMaterial().m_alphaTexture.getLayer());
 				}
 			}
 		
-		glDrawArrays(GL_TRIANGLES, 0, particles.size()*2*6);
+		glDrawArrays(GL_TRIANGLES, 0, (*particles).size()*2*6);
 			cout<<"\n";
 
-			if(showTexture && m_Grass.getMaterial().hasDiffuseTexture())
+			if(showTexture && (*mesh).getMaterial().hasDiffuseTexture())
 			{
-				m_Grass.getMaterial().m_diffuseTexture.unbind();
-				m_Grass.getMaterial().m_alphaTexture.unbind();
+				(*mesh).getMaterial().m_diffuseTexture.unbind();
+				(*mesh).getMaterial().m_alphaTexture.unbind();
 			}
 	
 		if(showTexture){

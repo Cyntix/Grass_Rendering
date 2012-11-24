@@ -66,9 +66,9 @@ init()
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-	m_GrassScale = 250;
-	m_PatternsScale = 1000;
-	m_FlowerScale = 150;
+	m_GrassScale = 200;
+	m_PatternsScale = 750;
+	m_FlowerScale = 100;
 }
 
 
@@ -204,21 +204,34 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	//VBO
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo); //activation of the buffer
 	glBufferData(GL_ARRAY_BUFFER, (*particles).size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
+	GLubyte * densityData = m_Terrain.getMaterial().m_density.getData();
+	unsigned int densityWidth = m_Terrain.getMaterial().m_density.getWidth();
+	unsigned int densityHeight = m_Terrain.getMaterial().m_density.getHeight();
+
 	for(int i = 0; i<(int)(*particles).size(); i++){
 
 		//draws only if on the terrain
 		double particleXpos = (*particles).at(i).x;
 		double particleZpos = (*particles).at(i).z;
+
 		if(particleXpos <= maxX && particleXpos >= minX && particleZpos <= maxZ && particleZpos >= minZ){
 
+			//Compute density
+			int densityPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*densityWidth;
+			int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
+			float color = densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3];
+			float probability = drand48()*256;
+
+			if(probability  < color){
 			double data[2*6*3];
 			double dataNormals[2*6*3];
 			double dataCoords[2*6*2];
-			(*mesh).scaleObject(Vector3(scale, scale, scale));
 			(*mesh).translateWorld((*particles).at(i));
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
+			float arbitrarySize = (drand48() * scale/2) + scale;
 			(*mesh).rotateObject(Vector3(0,1,0), arbitraryAngle);
+			(*mesh).scaleObject(Vector3(arbitrarySize, arbitrarySize, arbitrarySize));
 			//Vertices
 			data[0] = getVertex(mesh, 0, false).x;
 			data[1] = getVertex(mesh, 0, false).y;
@@ -328,6 +341,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			glBufferSubData(GL_ARRAY_BUFFER, i*2*6*3*sizeof(double), 2*6*3*sizeof(double), data);
 			glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*2*6*3*sizeof(double), 6*2*3*sizeof(double), dataNormals);
 			glBufferSubData(GL_ARRAY_BUFFER, texPointer+i*2*6*2*sizeof(double), 2*6*2*sizeof(double), dataCoords);
+			}
 			(*mesh).setTransformation(Matrix4().loadIdentity());
 			}
 		}

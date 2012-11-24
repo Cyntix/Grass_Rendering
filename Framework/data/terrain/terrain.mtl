@@ -4,4 +4,5 @@ Ka 1.00 1.00 1.00
 Tf 1.00 1.00 1.00
 map_Kd textures\ground.tga
 map_nm textures\ground_normal_map.tga
+map_density textures\density.tga
 Ni 1.00

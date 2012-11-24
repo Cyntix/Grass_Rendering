@@ -45,6 +45,7 @@ public:
     Texture m_diffuseTexture;
     Texture m_normal_mapTexture;
 	Texture m_alphaTexture;
+	Texture m_density;
 };
 
 class Mesh3D : public Object3D
@@ -192,7 +193,7 @@ public:
         assert( part < m_materials.size() ); return *m_materials[part];
     }
     
-	const MeshMaterial& getMaterial(unsigned int part = 0)
+	MeshMaterial& getMaterial(unsigned int part = 0)
     {
         assert( part < m_materials.size() ); return *m_materials[part];
     }

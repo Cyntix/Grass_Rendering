@@ -148,6 +148,17 @@ private:
 				#endif
 				_materialsManager.materials.back()->m_alphaTexture.create(texturePath);
 				_materialsManager.materials.back()->m_alphaTexture.setLayer(2);
+			}else if(word == "map_density")
+			{
+				std::string texturePath;
+				lineStream >> texturePath;
+				#ifdef WIN32
+					texturePath = _filenameMTL.substr(0, _filenameMTL.find_last_of("\\")+1) + texturePath;
+				#else
+					texturePath = _filenameMTL.substr(0, _filenameMTL.find_last_of("/")+1) + texturePath;
+				#endif
+				_materialsManager.materials.back()->m_density.create(texturePath);
+				_materialsManager.materials.back()->m_density.setLayer(3);
 			}
 		}
 		myfile.close();

@@ -191,3 +191,13 @@ void Texture::clear()
 	}
 }
 ///////////////////////////////////////////////////////////////////////////
+
+GLubyte * Texture::getData(){
+	assert(id_!=0);
+	GLubyte * data = new GLubyte [width_*height_*3];
+
+	glBindTexture(GL_TEXTURE_2D, id_);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return data;
+}

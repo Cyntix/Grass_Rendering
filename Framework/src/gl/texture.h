@@ -13,6 +13,7 @@
 #define __TEXTURE_H__
 #include <string>
 #include "gl.h"
+#include "../math/Vector3.h"
 class Texture 
 {
 public:
@@ -44,6 +45,16 @@ public:
 	
 	//Id of this texture
 	unsigned int getID() const;
+
+	GLubyte * getData();
+
+	unsigned int getWidth() {
+		return width_;
+	}
+
+	unsigned int getHeight() {
+		return height_;
+	}
 private:
 	void clear();
 	unsigned int id_;

@@ -47,7 +47,7 @@ public:
 	GrassRendering(const char* _title, int _width, int _height);
   
 	void load_mesh(const std::string& filenameObj, MeshType type);
-	void load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale);
+	void load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale, int* bufferSize);
 	void load_grass();
 	void load_flowers();
 	
@@ -63,7 +63,7 @@ protected:
 
 	virtual void draw_scene(DrawMode _draw_mode);
 
-	void draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture);
+	void draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture, int* bufferSize);
 	void draw_grass();
 	void draw_flowers();
     void draw_sky();
@@ -88,6 +88,8 @@ protected:
 	//Vertex buffer
 	GLuint vboGrass;
 	GLuint vboFlowers;
+	int vboGrassSize;
+	int vboFlowersSize;
 
 	//animation
 	float direction;

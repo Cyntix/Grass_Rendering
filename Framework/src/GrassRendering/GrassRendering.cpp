@@ -152,7 +152,7 @@ load_mesh(const std::string& filenameObj, MeshType type)
 	}	
 }
 
-void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale){
+void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale, int* bufferSize){
 	Vector3 starting_point = m_Terrain.origin();
 	starting_point.x = starting_point.x-m_TerrainScale;
 	starting_point.z = starting_point.z-m_TerrainScale;
@@ -203,13 +203,14 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 
 	//VBO
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo); //activation of the buffer
-	glBufferData(GL_ARRAY_BUFFER, (*particles).size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
+	*bufferSize = (*particles).size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double) + 2*6*4*sizeof(double));
+	glBufferData(GL_ARRAY_BUFFER, *bufferSize, NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
 	GLubyte * densityData = m_Terrain.getMaterial().m_density.getData();
 	GLubyte * colorVariationData = m_Terrain.getMaterial().m_color_variation.getData();
 	unsigned int densityWidth = m_Terrain.getMaterial().m_density.getWidth();
 	unsigned int densityHeight = m_Terrain.getMaterial().m_density.getHeight();
-	unsigned int colorVariationWidth = m_Terrain.getMaterial().m_density.getWidth();
-	unsigned int colorVariationHeight = m_Terrain.getMaterial().m_density.getHeight();
+	unsigned int colorVariationWidth = m_Terrain.getMaterial().m_color_variation.getWidth();
+	unsigned int colorVariationHeight = m_Terrain.getMaterial().m_color_variation.getHeight();
 
 	for(int i = 0; i<(int)(*particles).size(); i++){
 
@@ -222,10 +223,10 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			//Compute density
 			int densityPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*densityWidth;
 			int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
-			float color = densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3];
+			float densityColor = densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3];
 			float probability = drand48()*256;
 			
-			if(probability  < color){
+			if(probability  < densityColor){
 			double data[2*6*3];
 			double dataNormals[2*6*3];
 			double dataCoords[2*6*2];
@@ -234,7 +235,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			//Compute color Variation
 			int colorVariationPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationWidth;
 			int colorVariationPixelYpos = colorVariationHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationHeight;
-			float color = densityData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3];
+			float colorVariation = (double)(colorVariationData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3])/256; //used in the buffer directly
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
 			float arbitrarySize = (drand48() * scale/2) + scale;
@@ -345,10 +346,21 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			dataCoords[21] = getTexCoord(mesh, 3).y;
 			dataCoords[22] = getTexCoord(mesh, 1).x;
 			dataCoords[23] = getTexCoord(mesh, 1).y;
-			//DEMANDER AUX ASSISTANTS POUR MODULARISER
+
+			int colorPointer = texPointer + (*particles).size()*(2*6*2*sizeof(double));
+			//Note: there should be one color per vertex...
+			double colorData[2*6*4];
+			for(int k=0; k<2*6; k++){
+				colorData[k*4] = colorVariation;
+				colorData[k*4 + 1] = colorVariation;
+				colorData[k*4 + 2] = colorVariation;
+				colorData[k*4 + 3] = 1;
+			}
+
 			glBufferSubData(GL_ARRAY_BUFFER, i*2*6*3*sizeof(double), 2*6*3*sizeof(double), data);
-			glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*2*6*3*sizeof(double), 6*2*3*sizeof(double), dataNormals);
+			glBufferSubData(GL_ARRAY_BUFFER, normalPointer + i*2*6*3*sizeof(double), 2*6*3*sizeof(double), dataNormals);
 			glBufferSubData(GL_ARRAY_BUFFER, texPointer+i*2*6*2*sizeof(double), 2*6*2*sizeof(double), dataCoords);
+			glBufferSubData(GL_ARRAY_BUFFER, colorPointer+i*2*6*4*sizeof(double), 2*6*4*sizeof(double), colorData);
 			}
 			(*mesh).setTransformation(Matrix4().loadIdentity());
 			}
@@ -358,14 +370,14 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 
 void GrassRendering::load_grass(){
 	cout<<"Generation of grass:\n";
-	load_particles(&vboGrass, &grass_particles, &m_Grass, m_GrassScale);
+	load_particles(&vboGrass, &grass_particles, &m_Grass, m_GrassScale, &vboGrassSize);
 	cout<<"\n\n";
 }
 
 void GrassRendering::load_flowers(){
 	cout<<"Generation of flowers:\n";
 	m_PatternsScale = 4000;
-	load_particles(&vboFlowers, &flowers_particles, &m_Flower, m_FlowerScale);
+	load_particles(&vboFlowers, &flowers_particles, &m_Flower, m_FlowerScale, &vboFlowersSize);
 }
 
 Vector3 GrassRendering::getVertex(Mesh3D* mesh, int i, boolean cross){
@@ -520,14 +532,14 @@ draw_scene(DrawMode _draw_mode)
 }
 
 void GrassRendering::draw_grass(){
-	draw_buffer(m_meshShaderStencil, vboGrass, &m_Grass, &grass_particles, m_showTextureGrass);
+	draw_buffer(m_meshShaderStencil, vboGrass, &m_Grass, &grass_particles, m_showTextureGrass, &vboGrassSize);
 }
 
 void GrassRendering::draw_flowers(){
-	draw_buffer(m_meshShaderStencil, vboFlowers, &m_Flower, &flowers_particles , m_showTextureFlowers);
+	draw_buffer(m_meshShaderStencil, vboFlowers, &m_Flower, &flowers_particles , m_showTextureFlowers, &vboFlowersSize);
 }
 
-void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture){
+void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture, int* bufferSize){
 	m_meshShaderStencil.bind();
 
 	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
@@ -553,19 +565,21 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 		if(showTexture){
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
+		glEnableClientState(GL_COLOR_ARRAY);
 	
 		glVertexPointer(3, GL_DOUBLE, 0, BUFFER_OFFSET(0));
 		glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET((*particles).size()*(2*6*3*sizeof(double))));
 		if(showTexture){
 			glTexCoordPointer(2, GL_DOUBLE, 0, BUFFER_OFFSET(2*(*particles).size()*(2*6*3*sizeof(double))));
 		}
+		glColorPointer(4, GL_DOUBLE, 0, BUFFER_OFFSET((*particles).size()*(2*(2*6*3*sizeof(double)) + 2*6*2*sizeof(double))));
 
 		sh.setIntUniform("useTexture", showTexture && (*mesh).getMaterial().hasDiffuseTexture());
-			sh.setVector3Uniform("diffuseColor", 
-								 (*mesh).getMaterial().m_diffuseColor.x, 
-								 (*mesh).getMaterial().m_diffuseColor.y, 
-								 (*mesh).getMaterial().m_diffuseColor.z );
-			sh.setFloatUniform("specularExp", (*mesh).getMaterial().m_specularExp);
+		sh.setVector3Uniform("diffuseColor", 
+							(*mesh).getMaterial().m_diffuseColor.x, 
+							(*mesh).getMaterial().m_diffuseColor.y, 
+							(*mesh).getMaterial().m_diffuseColor.z );
+		sh.setFloatUniform("specularExp", (*mesh).getMaterial().m_specularExp);
 
 		if(showTexture && (*mesh).getMaterial().hasDiffuseTexture())
 			{
@@ -586,6 +600,7 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 				(*mesh).getMaterial().m_alphaTexture.unbind();
 			}
 	
+		glDisableClientState(GL_COLOR_ARRAY);
 		if(showTexture){
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}

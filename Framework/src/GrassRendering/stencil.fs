@@ -31,5 +31,5 @@ void main()
 	//also add a small ambient term
 	finalcolor += vec4(diffused+ambiant*0.75, alphaValue);	
 
-	gl_FragColor = finalcolor;
+	gl_FragColor = vec4(pow(finalcolor.r, 1/gl_Color.r), pow(finalcolor.g, 1/gl_Color.g), pow(finalcolor.b, 1/gl_Color.b), finalcolor.a);
 }

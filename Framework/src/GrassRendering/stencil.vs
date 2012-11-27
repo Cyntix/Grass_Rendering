@@ -32,4 +32,5 @@ void main()
 	gl_Position = projection * vec4( vertex, 1.0 );
 	
 	lightDir = normalize(lightpositionCamera-vertex);
+	gl_FrontColor = gl_Color;
 }

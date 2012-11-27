@@ -159,6 +159,17 @@ private:
 				#endif
 				_materialsManager.materials.back()->m_density.create(texturePath);
 				_materialsManager.materials.back()->m_density.setLayer(3);
+			}else if(word == "map_color_variation")
+			{
+				std::string texturePath;
+				lineStream >> texturePath;
+				#ifdef WIN32
+					texturePath = _filenameMTL.substr(0, _filenameMTL.find_last_of("\\")+1) + texturePath;
+				#else
+					texturePath = _filenameMTL.substr(0, _filenameMTL.find_last_of("/")+1) + texturePath;
+				#endif
+				_materialsManager.materials.back()->m_color_variation.create(texturePath);
+				_materialsManager.materials.back()->m_color_variation.setLayer(4);
 			}
 		}
 		myfile.close();

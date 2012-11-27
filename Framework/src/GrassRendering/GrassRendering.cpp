@@ -205,8 +205,11 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo); //activation of the buffer
 	glBufferData(GL_ARRAY_BUFFER, (*particles).size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double)), NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
 	GLubyte * densityData = m_Terrain.getMaterial().m_density.getData();
+	GLubyte * colorVariationData = m_Terrain.getMaterial().m_color_variation.getData();
 	unsigned int densityWidth = m_Terrain.getMaterial().m_density.getWidth();
 	unsigned int densityHeight = m_Terrain.getMaterial().m_density.getHeight();
+	unsigned int colorVariationWidth = m_Terrain.getMaterial().m_density.getWidth();
+	unsigned int colorVariationHeight = m_Terrain.getMaterial().m_density.getHeight();
 
 	for(int i = 0; i<(int)(*particles).size(); i++){
 
@@ -221,12 +224,17 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
 			float color = densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3];
 			float probability = drand48()*256;
-
+			
 			if(probability  < color){
 			double data[2*6*3];
 			double dataNormals[2*6*3];
 			double dataCoords[2*6*2];
 			(*mesh).translateWorld((*particles).at(i));
+
+			//Compute color Variation
+			int colorVariationPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationWidth;
+			int colorVariationPixelYpos = colorVariationHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationHeight;
+			float color = densityData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3];
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
 			float arbitrarySize = (drand48() * scale/2) + scale;

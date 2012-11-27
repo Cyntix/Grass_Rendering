@@ -46,6 +46,7 @@ public:
     Texture m_normal_mapTexture;
 	Texture m_alphaTexture;
 	Texture m_density;
+	Texture m_color_variation;
 };
 
 class Mesh3D : public Object3D

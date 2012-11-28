@@ -1,7 +1,9 @@
 varying vec3 normal, lightDir;
 
-uniform int useTexture;
-uniform int useAlphaToCoverage;
+uniform bool useTexture;
+uniform bool useTransparency;
+uniform bool useAlphaToCoverage;
+uniform bool useColorVariation;
 uniform sampler2D texture;
 uniform sampler2D alpha;
 uniform vec3 diffuseColor;
@@ -12,8 +14,8 @@ void main()
 {	
     float alphaValue = 1;
     vec4 alphaTex = texture2D(alpha, gl_TexCoord[0].xy);
-    if(useTexture == 1){        
-        if(useAlphaToCoverage != 1 && alphaTex.x<0.95){
+    if(useTexture && useTransparency){        
+        if(!useAlphaToCoverage && alphaTex.x<0.95){
             discard;
         }else{
             alphaValue = texture2D(alpha, gl_TexCoord[0].xy).x;
@@ -22,7 +24,7 @@ void main()
 	vec4 finalcolor = vec4(0.0);
 	
 	vec3 ambiant = diffuseColor;
-    if(useTexture!=0)
+    if(useTexture)
     {
         ambiant = texture2D(texture, gl_TexCoord[0].xy).xyz * ambiant;
     }
@@ -31,5 +33,9 @@ void main()
 	//also add a small ambient term
 	finalcolor += vec4(diffused+ambiant*0.75, alphaValue);	
 
-	gl_FragColor = vec4(pow(finalcolor.r, 1/gl_Color.r), pow(finalcolor.g, 1/gl_Color.g), pow(finalcolor.b, 1/gl_Color.b), finalcolor.a);
+    if(useColorVariation){
+	    gl_FragColor = vec4(pow(finalcolor.r, 1/gl_Color.r), pow(finalcolor.g, 1/gl_Color.g), pow(finalcolor.b, 1/gl_Color.b), finalcolor.a);
+    }else{
+        gl_FragColor = finalcolor;
+    }
 }

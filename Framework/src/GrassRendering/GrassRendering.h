@@ -109,7 +109,10 @@ protected:
 	bool m_showTextureTerrain;
 	bool m_showTextureGrass;
 	bool m_showTextureFlowers;
+	bool m_showTransparency;
 	bool m_showAlphaToCoverage;
+	bool m_showDensity;
+	bool m_show_colorVariation;
 	
 	//scaling factors
 	float m_SkyScale;

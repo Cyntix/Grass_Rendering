@@ -54,6 +54,7 @@ init()
 	m_showTextureSky = false;
 	m_showGrass = true;
 	m_showAlphaToCoverage = true;
+	m_showTransparency = true;
 
 	currentTime = 0.0;
 	isWatchOn = false;
@@ -116,6 +117,14 @@ load_mesh(const std::string& filenameObj, MeshType type)
 			
 			m_Terrain.scaleObject(Vector3(m_TerrainScale, m_TerrainScale, m_TerrainScale));
 			m_showTextureTerrain = m_Terrain.hasUvTextureCoord();
+
+			if(m_Terrain.getMaterial(0).m_density.getID()!=0){
+				m_showDensity=true;
+			}
+
+			if(m_Terrain.getMaterial(0).m_color_variation.getID()!=0){
+				m_show_colorVariation=true;
+			}
 			break;
 		case GRASS:
 			// load mesh from obj
@@ -126,7 +135,6 @@ load_mesh(const std::string& filenameObj, MeshType type)
 				m_Grass.calculateVertexNormals();
 			
 			m_showTextureGrass = m_Grass.hasUvTextureCoord();
-
 			break;
 		case PARTICLE_PATTERN:{
 			// load mesh from obj
@@ -434,8 +442,16 @@ keyboard(int key, int x, int y)
 		case 'g':
 			m_showGrass = !m_showGrass;
 			break;
+		case 'z':
+			m_showTransparency = !m_showTransparency;
+			break;
 		case 'a':
 			m_showAlphaToCoverage = !m_showAlphaToCoverage;
+			break;
+		case 'c':
+			if(m_Terrain.getMaterial(0).m_color_variation.getID()!=0){
+				m_show_colorVariation = !m_show_colorVariation;
+			}
 			break;
 		case ' ':
 			if(isWatchOn)
@@ -549,10 +565,11 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 	sh.setMatrix4x4Uniform("modelworld", (*mesh).getTransformation());	
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", (*mesh).getTransformation().Inverse().Transpose());
 	m_meshShaderStencil.setFloatUniform("direction", direction);
+	sh.setIntUniform("useTransparency", m_showTransparency);
 	sh.setIntUniform("useAlphaToCoverage", m_showAlphaToCoverage);
 
 	if(m_showGrass){
-		if(m_showAlphaToCoverage){
+		if(m_showTransparency && m_showAlphaToCoverage){
 			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -565,7 +582,12 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 		if(showTexture){
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
-		glEnableClientState(GL_COLOR_ARRAY);
+		if(m_show_colorVariation){
+			glEnableClientState(GL_COLOR_ARRAY);
+			sh.setIntUniform("useColorVariation", 1);
+		}else{
+			sh.setIntUniform("useColorVariation", 0);
+		}
 	
 		glVertexPointer(3, GL_DOUBLE, 0, BUFFER_OFFSET(0));
 		glNormalPointer(GL_DOUBLE, 0, BUFFER_OFFSET((*particles).size()*(2*6*3*sizeof(double))));
@@ -600,7 +622,9 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 				(*mesh).getMaterial().m_alphaTexture.unbind();
 			}
 	
-		glDisableClientState(GL_COLOR_ARRAY);
+		if(m_show_colorVariation){
+			glDisableClientState(GL_COLOR_ARRAY);
+		}
 		if(showTexture){
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
@@ -608,7 +632,7 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
-		if(m_showAlphaToCoverage){
+		if(m_showTransparency && m_showAlphaToCoverage){
 			glDisable(GL_BLEND);
 			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
 		}

@@ -10,8 +10,10 @@ uniform vec3 lightcolor;
 		
 void main()
 {			
+    vec3 newLightDir = normalize(lightDir);
+    
 	vec4 finalcolor = vec4(0.0, 0.0, 0.0, 0.0);
-	vec3 finalNormal = normal;
+	vec3 finalNormal = normalize(normal);
 	
 	vec3 color = diffuseColor;
     vec3 normalColor = vec3(0, 0, 0);
@@ -21,11 +23,11 @@ void main()
         normalColor = texture2D(normal_map, gl_TexCoord[0].xy).xyz;
 		finalNormal = normalize(vec3(normal.x + normalColor.x, normal.y + normalColor.y, normal.z + normalColor.z));
     }
-    color = color*lightcolor*max(0.0, dot(finalNormal, lightDir));
+    color = color*lightcolor*max(0.0, dot(finalNormal, newLightDir));
 
     //specular
     vec3 vVec = normalize(eyeVec);
-    double specular = pow(clamp(dot(reflect(-lightDir, normalColor), vVec), 0.0, 1.0), 10);
+    double specular = pow(clamp(dot(reflect(-newLightDir, normalColor), vVec), 0.0, 1.0), 10);
 
 	finalcolor += vec4(color + vec3(specular, specular, specular)*0.1 + diffuseColor*0.1, 1.0);	
 

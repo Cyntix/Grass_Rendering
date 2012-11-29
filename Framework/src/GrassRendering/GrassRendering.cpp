@@ -161,6 +161,16 @@ load_mesh(const std::string& filenameObj, MeshType type)
 }
 
 void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale, int* bufferSize){
+	vector<Vector2> terrain_uv = m_Terrain.getUVs();
+	vector<Vector2> terrain_uv_good_size;
+	for(unsigned int i = 0; i < terrain_uv.size(); i++){
+		Vector2 vertex = terrain_uv.at(i);
+		vertex.x = (vertex.x-0.5)*m_TerrainScale;
+		vertex.y = (vertex.y-0.5)*m_TerrainScale;
+		terrain_uv_good_size.push_back(vertex);
+		cout<<"Vertice: " << vertex.x<<"\n";
+	}
+
 	Vector3 starting_point = m_Terrain.origin();
 	starting_point.x = starting_point.x-m_TerrainScale;
 	starting_point.z = starting_point.z-m_TerrainScale;
@@ -170,9 +180,26 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	m_Pattern.translateWorld(starting_point);
 	int x_gone = 0;
 	do{
+		//TODO: ENLEVER LES POINTS HORS DU PLAN
 		cout<<"Creation of billboard on position: (" << m_Pattern.origin().x << ", " << m_Pattern.origin().y << ", " << m_Pattern.origin().z << ")...\n";
 		for(int i = 0; i<m_Pattern.getNumberOfVertices(); i++){
-			(*particles).push_back(m_Pattern.getTransformation() * m_Pattern.getVertexPosition(i));
+			Vector3 pointIn3d = m_Pattern.getTransformation() * m_Pattern.getVertexPosition(i);
+			//1.Trouver le triangle dans lequel se trouve le point en 2D.
+			Vector2 pointIn2d = Vector2(pointIn3d.x, pointIn3d.z);
+			unsigned indicePoint = 0;
+			float minDistance = (pointIn2d-terrain_uv_good_size.at(0)).length();
+			for(unsigned int j = 1; j<terrain_uv_good_size.size(); j++){
+				float distance = (pointIn2d-terrain_uv_good_size.at(j)).length();
+				if(distance<minDistance){
+					indicePoint = j;
+					minDistance = distance;
+				}
+			}
+			cout << minDistance << "\n";
+			//2.Extrapoler le point en 3D avec les coordinnees barycentriques.
+
+			//POINT FINAL A PUSHER
+			(*particles).push_back(pointIn3d);
 		}
 		if(m_Pattern.origin().x<=m_TerrainScale){			
 			m_Pattern.translateWorld(Vector3(m_PatternsScale, 0, 0));

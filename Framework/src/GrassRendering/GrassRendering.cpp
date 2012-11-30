@@ -69,7 +69,7 @@ init()
 	m_TerrainScale = 5000.0;
 	m_GrassScale = 200;
 	m_PatternsScale = 750;
-	m_FlowerScale = 100;
+	m_FlowerScale = 150;
 }
 
 
@@ -160,15 +160,22 @@ load_mesh(const std::string& filenameObj, MeshType type)
 	}	
 }
 
+float triangleArea(Vector2 p1, Vector2 p2, Vector2 p3) {
+	float a = (p1-p2).length();
+	float b = (p2-p3).length();
+	float c = (p3-p1).length();
+	float s = (a+b+c)/2;
+	return sqrt(s*(s-a)*(s-b)*(s-c));
+}
+
 void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale, int* bufferSize){
 	vector<Vector2> terrain_uv = m_Terrain.getUVs();
 	vector<Vector2> terrain_uv_good_size;
-	for(unsigned int i = 0; i < terrain_uv.size(); i++){
+	for(unsigned int i = 0; i < terrain_uv.size(); i++){ //SEMBLE OK!
 		Vector2 vertex = terrain_uv.at(i);
-		vertex.x = (vertex.x-0.5)*m_TerrainScale;
-		vertex.y = (vertex.y-0.5)*m_TerrainScale;
+		vertex.x = (vertex.x-0.5)*2*m_TerrainScale;
+		vertex.y = (vertex.y-0.5)*2*m_TerrainScale;
 		terrain_uv_good_size.push_back(vertex);
-		cout<<"Vertice: " << vertex.x<<"\n";
 	}
 
 	Vector3 starting_point = m_Terrain.origin();
@@ -180,26 +187,71 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	m_Pattern.translateWorld(starting_point);
 	int x_gone = 0;
 	do{
-		//TODO: ENLEVER LES POINTS HORS DU PLAN
-		cout<<"Creation of billboard on position: (" << m_Pattern.origin().x << ", " << m_Pattern.origin().y << ", " << m_Pattern.origin().z << ")...\n";
+		cout<<"Creation of pattern on position: (" << m_Pattern.origin().x << ", " << m_Pattern.origin().y << ", " << m_Pattern.origin().z << ")...\n";
 		for(int i = 0; i<m_Pattern.getNumberOfVertices(); i++){
 			Vector3 pointIn3d = m_Pattern.getTransformation() * m_Pattern.getVertexPosition(i);
 			//1.Trouver le triangle dans lequel se trouve le point en 2D.
 			Vector2 pointIn2d = Vector2(pointIn3d.x, pointIn3d.z);
-			unsigned indicePoint = 0;
-			float minDistance = (pointIn2d-terrain_uv_good_size.at(0)).length();
-			for(unsigned int j = 1; j<terrain_uv_good_size.size(); j++){
+
+			unsigned int indicePoints[3] = {-1, -1, -1};
+			float minDistances[3] = {-1, -1, -1};
+			for(unsigned int j = 0; j<terrain_uv_good_size.size(); j++){
 				float distance = (pointIn2d-terrain_uv_good_size.at(j)).length();
-				if(distance<minDistance){
-					indicePoint = j;
-					minDistance = distance;
+				if(minDistances[0] == -1 || (distance<minDistances[0])){
+						indicePoints[0] = j;
+						minDistances[0] = distance;
 				}
 			}
-			cout << minDistance << "\n";
-			//2.Extrapoler le point en 3D avec les coordinnees barycentriques.
+			for(unsigned int j = 0; j<terrain_uv_good_size.size(); j++){
+				float distance = (pointIn2d-terrain_uv_good_size.at(j)).length();
+				if(minDistances[1] == -1 || distance<minDistances[1] && distance!=minDistances[0]){
+					if(distance!=minDistances[0]){
+						indicePoints[1] = j;
+						minDistances[1] = distance;
+					}
+				}
+			}
+			for(unsigned int j = 0; j<terrain_uv_good_size.size(); j++){
+				float distance = (pointIn2d-terrain_uv_good_size.at(j)).length();
+				if(minDistances[2] == -1 || distance<minDistances[2] && distance!=minDistances[0] && distance!=minDistances[1]){
+					if(distance!=minDistances[0] && distance!=minDistances[1]){
+						indicePoints[2] = j;
+						minDistances[2] = distance;
+					}
+				}
+			}
+			/*cout<<"Le point " << pointIn2d.x<< ", " << pointIn2d.y<< " a comme points proches \n" << terrain_uv_good_size.at(indicePoints[0]).x<< ", " << terrain_uv_good_size.at(indicePoints[0]).y<< "\n"
+				<< terrain_uv_good_size.at(indicePoints[1]).x<< ", " << terrain_uv_good_size.at(indicePoints[1]).y<< "\n"
+				<< terrain_uv_good_size.at(indicePoints[2]).x<< ", " << terrain_uv_good_size.at(indicePoints[2]).y<< "\n";*/
 
+			//2.Extrapoler le point en 3D avec les coordinnees barycentriques.
+			Vector2 p1 = terrain_uv_good_size.at(indicePoints[0]);
+			Vector2 p2 = terrain_uv_good_size.at(indicePoints[1]);
+			Vector2 p3 = terrain_uv_good_size.at(indicePoints[2]);
+			
+			float triangle_area = triangleArea(p1, p2, p3);
+			float s1_area = triangleArea(pointIn2d, p2, p3);
+			float s2_area = triangleArea(p1, pointIn2d, p3);
+			float s3_area = triangleArea(p1, p2, pointIn2d);
+
+			float s1 = s1_area/triangle_area;
+			float s2 = s2_area/triangle_area;
+			float s3 = s3_area/triangle_area;
+
+			s1 = s1/(s1+s2+s3);
+			s2=s2/(s1+s2+s3);
+			s3=s3/(s1+s2+s3);
+
+			//cout<<"triangle_area "<< triangle_area << "s1: " << s1_area << "rapport: " << s1 <<"\n";
 			//POINT FINAL A PUSHER
-			(*particles).push_back(pointIn3d);
+			Vector3 p1_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[0]);
+			Vector3 p2_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[1]);
+			Vector3 p3_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[2]);
+
+			Vector3 interpolatedPoint = s1*p1_3D + s2*p2_3D + s3*p3_3D;
+			(*particles).push_back(interpolatedPoint);
+			//Version de base:
+			//(*particles).push_back(pointIn3d);
 		}
 		if(m_Pattern.origin().x<=m_TerrainScale){			
 			m_Pattern.translateWorld(Vector3(m_PatternsScale, 0, 0));
@@ -212,19 +264,26 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	m_Pattern.setTransformation(Matrix4().loadIdentity());
 
 	//calculates the min and max positions of the terrain (in x and z)
-	double minX = m_Terrain.getVertexPosition(0).x;
-	double maxX = minX;
-	double minZ = m_Terrain.getVertexPosition(0).z;
-	double maxZ = minX;
+	float minX = m_Terrain.getVertexPosition(0).x;
+	float maxX = minX;
+	float minY = m_Terrain.getVertexPosition(0).y;
+	float maxY = minY;
+	float minZ = m_Terrain.getVertexPosition(0).z;
+	float maxZ = minX;
 	for(int i = 1; i < m_Terrain.getNumberOfVertices(); ++i){
-		double xPos = m_Terrain.getVertexPosition(i).x;
-		double zPos = m_Terrain.getVertexPosition(i).z;
+		float xPos = m_Terrain.getVertexPosition(i).x;
+		float yPos = m_Terrain.getVertexPosition(i).y;
+		float zPos = m_Terrain.getVertexPosition(i).z;
 		if(xPos < minX) {
 			minX = xPos;
 		} else if(xPos > maxX) {
 			maxX = xPos;
 		}
-
+		if(yPos < minY) {
+			minY = yPos;
+		} else if(yPos > maxY) {
+			maxY = yPos;
+		}
 		if(zPos < minZ) {
 			minZ = zPos;
 		} else if(zPos > maxZ) {
@@ -233,6 +292,8 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	}
 	minX = minX * m_TerrainScale;
 	maxX = maxX * m_TerrainScale;
+	minY = minY * m_TerrainScale;
+	maxY = maxY * m_TerrainScale;
 	minZ = minZ * m_TerrainScale;
 	maxZ = maxZ * m_TerrainScale;
 
@@ -240,37 +301,60 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo); //activation of the buffer
 	*bufferSize = (*particles).size()*(2*6*3*sizeof(double) + 2*6*3*sizeof(double) + 2*6*2*sizeof(double) + 2*6*4*sizeof(double));
 	glBufferData(GL_ARRAY_BUFFER, *bufferSize, NULL, GL_STREAM_DRAW); //allocation of memory We double the capacity for the texture coordinates
-	GLubyte * densityData = m_Terrain.getMaterial().m_density.getData();
-	GLubyte * colorVariationData = m_Terrain.getMaterial().m_color_variation.getData();
-	unsigned int densityWidth = m_Terrain.getMaterial().m_density.getWidth();
-	unsigned int densityHeight = m_Terrain.getMaterial().m_density.getHeight();
-	unsigned int colorVariationWidth = m_Terrain.getMaterial().m_color_variation.getWidth();
-	unsigned int colorVariationHeight = m_Terrain.getMaterial().m_color_variation.getHeight();
+	
+	unsigned int densityWidth = 0;
+	unsigned int densityHeight = 0;
+	GLubyte * densityData;
+	if(m_showDensity){
+		densityData = m_Terrain.getMaterial().m_density.getData();
+		densityWidth = m_Terrain.getMaterial().m_density.getWidth();
+		densityHeight = m_Terrain.getMaterial().m_density.getHeight();
+	}
+
+	unsigned int colorVariationWidth = 0;
+	unsigned int colorVariationHeight = 0;
+	GLubyte * colorVariationData;
+	if(m_show_colorVariation){
+		colorVariationData = m_Terrain.getMaterial().m_color_variation.getData();
+		colorVariationWidth = m_Terrain.getMaterial().m_color_variation.getWidth();
+		colorVariationHeight = m_Terrain.getMaterial().m_color_variation.getHeight();
+	}
 
 	for(int i = 0; i<(int)(*particles).size(); i++){
 
 		//draws only if on the terrain
 		double particleXpos = (*particles).at(i).x;
+		double particleYpos = (*particles).at(i).y;
 		double particleZpos = (*particles).at(i).z;
 
-		if(particleXpos <= maxX && particleXpos >= minX && particleZpos <= maxZ && particleZpos >= minZ){
+		if(particleXpos <= maxX && particleXpos >= minX && particleYpos <= maxY && particleYpos >= minY && particleZpos <= maxZ && particleZpos >= minZ){
 
-			//Compute density
-			int densityPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*densityWidth;
-			int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
-			float densityColor = densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3];
+			float densityColor = 1;
 			float probability = drand48()*256;
-			
+			//Compute density
+			if(m_showDensity){
+				int densityPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*densityWidth;
+				int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
+				densityColor = densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3];
+				if(probability  <= densityColor){
+				(*mesh).translateWorld((*particles).at(i));
+				}
+			}else{
+				(*mesh).translateWorld((*particles).at(i));
+			}
+
 			if(probability  < densityColor){
 			double data[2*6*3];
 			double dataNormals[2*6*3];
 			double dataCoords[2*6*2];
-			(*mesh).translateWorld((*particles).at(i));
 
 			//Compute color Variation
-			int colorVariationPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationWidth;
-			int colorVariationPixelYpos = colorVariationHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationHeight;
-			float colorVariation = (double)(colorVariationData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3])/256; //used in the buffer directly
+			float colorVariation = 1;
+			if(m_show_colorVariation){
+				int colorVariationPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationWidth;
+				int colorVariationPixelYpos = colorVariationHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationHeight;
+				colorVariation = (double)(colorVariationData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3])/256; //used in the buffer directly
+			}
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
 			float arbitrarySize = (drand48() * scale/2) + scale;

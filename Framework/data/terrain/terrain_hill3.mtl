@@ -1,0 +1,9 @@
+
+Kd 1.00 1.00 1.00
+Ka 1.00 1.00 1.00
+Tf 1.00 1.00 1.00
+map_Kd textures\color_variation.tga
+map_nm textures\ground_normal_map.tga
+map_density textures\smilley_density.tga
+map_color_variation textures\color_variation.tga
+Ni 1.00

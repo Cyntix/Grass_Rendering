@@ -1,9 +1,0 @@
-illum 4
-Kd 1.00 1.00 1.00
-Ka 1.00 1.00 1.00
-Tf 1.00 1.00 1.00
-map_Kd textures\ground.tga
-map_nm textures\ground_normal_map.tga
-
-Ni 1.00
-

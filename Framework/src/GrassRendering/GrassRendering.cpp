@@ -67,9 +67,9 @@ init()
 	
 	m_SkyScale = 5000.0;
 	m_TerrainScale = 5000.0;
-	m_GrassScale = 200;
-	m_PatternsScale = 750;
-	m_FlowerScale = 150;
+	m_GrassScale = 100;
+	m_PatternsScale = 500;
+	m_FlowerScale = 50;
 }
 
 
@@ -161,11 +161,7 @@ load_mesh(const std::string& filenameObj, MeshType type)
 }
 
 float triangleArea(Vector2 p1, Vector2 p2, Vector2 p3) {
-	float a = (p1-p2).length();
-	float b = (p2-p3).length();
-	float c = (p3-p1).length();
-	float s = (a+b+c)/2;
-	return sqrt(s*(s-a)*(s-b)*(s-c));
+	return (float)1/2*abs((p1.x-p3.x)*(p2.y-p1.y) - (p1.x-p2.x)*(p3.y-p1.y));
 }
 
 void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mesh3D* mesh, float scale, int* bufferSize){
@@ -177,7 +173,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 		vertex.y = (vertex.y-0.5)*2*m_TerrainScale;
 		terrain_uv_good_size.push_back(vertex);
 	}
-
+	
 	Vector3 starting_point = m_Terrain.origin();
 	starting_point.x = starting_point.x-m_TerrainScale;
 	starting_point.z = starting_point.z-m_TerrainScale;
@@ -238,18 +234,16 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			float s2 = s2_area/triangle_area;
 			float s3 = s3_area/triangle_area;
 
-			s1 = s1/(s1+s2+s3);
-			s2=s2/(s1+s2+s3);
-			s3=s3/(s1+s2+s3);
-
 			//cout<<"triangle_area "<< triangle_area << "s1: " << s1_area << "rapport: " << s1 <<"\n";
 			//POINT FINAL A PUSHER
+			if(s1+s2+s3<=1){
 			Vector3 p1_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[0]);
 			Vector3 p2_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[1]);
 			Vector3 p3_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[2]);
 
 			Vector3 interpolatedPoint = s1*p1_3D + s2*p2_3D + s3*p3_3D;
 			(*particles).push_back(interpolatedPoint);
+			}
 			//Version de base:
 			//(*particles).push_back(pointIn3d);
 		}
@@ -330,18 +324,16 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 		if(particleXpos <= maxX && particleXpos >= minX && particleYpos <= maxY && particleYpos >= minY && particleZpos <= maxZ && particleZpos >= minZ){
 
 			float densityColor = 1;
-			float probability = drand48()*256;
+			float probability = drand48();
 			//Compute density
 			if(m_showDensity){
 				int densityPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*densityWidth;
 				int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
-				densityColor = densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3];
-				if(probability  <= densityColor){
-				(*mesh).translateWorld((*particles).at(i));
+				if(densityPixelXpos < densityWidth && densityPixelYpos < densityHeight){
+					densityColor = (float)densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3]/256;
 				}
-			}else{
-				(*mesh).translateWorld((*particles).at(i));
 			}
+			(*mesh).translateWorld((*particles).at(i));
 
 			if(probability  < densityColor){
 			double data[2*6*3];
@@ -353,7 +345,9 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			if(m_show_colorVariation){
 				int colorVariationPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationWidth;
 				int colorVariationPixelYpos = colorVariationHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationHeight;
-				colorVariation = (double)(colorVariationData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3])/256; //used in the buffer directly
+				if(colorVariationPixelXpos < colorVariationWidth && colorVariationPixelYpos < colorVariationHeight){
+					colorVariation = (double)(colorVariationData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3])/256; //used in the buffer directly
+				}
 			}
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
@@ -495,8 +489,9 @@ void GrassRendering::load_grass(){
 
 void GrassRendering::load_flowers(){
 	cout<<"Generation of flowers:\n";
-	m_PatternsScale = 4000;
+	m_PatternsScale *=5;
 	load_particles(&vboFlowers, &flowers_particles, &m_Flower, m_FlowerScale, &vboFlowersSize);
+	cout<<"\n\n";
 }
 
 Vector3 GrassRendering::getVertex(Mesh3D* mesh, int i, boolean cross){

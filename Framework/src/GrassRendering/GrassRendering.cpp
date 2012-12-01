@@ -327,8 +327,8 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			float probability = drand48();
 			//Compute density
 			if(m_showDensity){
-				int densityPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*densityWidth;
-				int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
+				unsigned int densityPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*densityWidth;
+				unsigned int densityPixelYpos = densityHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*densityHeight;
 				if(densityPixelXpos < densityWidth && densityPixelYpos < densityHeight){
 					densityColor = (float)densityData[(densityPixelXpos + (densityPixelYpos*densityWidth))*3]/256;
 				}
@@ -343,8 +343,8 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			//Compute color Variation
 			float colorVariation = 1;
 			if(m_show_colorVariation){
-				int colorVariationPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationWidth;
-				int colorVariationPixelYpos = colorVariationHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationHeight;
+				unsigned int colorVariationPixelXpos = (particleXpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationWidth;
+				unsigned int colorVariationPixelYpos = colorVariationHeight-(particleZpos+m_TerrainScale)/(2*m_TerrainScale)*colorVariationHeight;
 				if(colorVariationPixelXpos < colorVariationWidth && colorVariationPixelYpos < colorVariationHeight){
 					colorVariation = (double)(colorVariationData[(colorVariationPixelXpos + (colorVariationPixelYpos*colorVariationWidth))*3])/256; //used in the buffer directly
 				}

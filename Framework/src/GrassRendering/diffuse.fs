@@ -1,4 +1,4 @@
-varying vec3 normal, eyeVec, lightDir;
+varying vec3 normal, lightDir, eyeVec;
 
 uniform int useTexture;
 uniform sampler2D texture;
@@ -10,26 +10,25 @@ uniform vec3 lightcolor;
 		
 void main()
 {			
-    vec3 newLightDir = normalize(lightDir);
+    vec3 finalLightDir = normalize(lightDir);
     
 	vec4 finalcolor = vec4(0.0, 0.0, 0.0, 0.0);
 	vec3 finalNormal = normalize(normal);
 	
-	vec3 color = diffuseColor;
+    vec3 ambiant = diffuseColor;
     vec3 normalColor = vec3(0, 0, 0);
     if(useTexture!=0)
     {
-        color = texture2D(texture, gl_TexCoord[0].xy).xyz * color;
-        normalColor = texture2D(normal_map, gl_TexCoord[0].xy).xyz;
-		finalNormal = normalize(vec3(normal.x + normalColor.x, normal.y + normalColor.y, normal.z + normalColor.z));
+        ambiant = texture2D(texture, gl_TexCoord[0].xy*5).rgb * ambiant;
+        normalColor = texture2D(normal_map, gl_TexCoord[0].xy*5).rgb;
+		finalNormal = normalize(finalNormal + normalColor);
     }
-    color = color*lightcolor*max(0.0, dot(finalNormal, newLightDir));
-
-    //specular
+    vec3 finalDiffuseColor = ambiant*lightcolor*max(0.0, dot(finalNormal, finalLightDir))*0.25;
+    
     vec3 vVec = normalize(eyeVec);
-    double specular = pow(clamp(dot(reflect(-newLightDir, normalColor), vVec), 0.0, 1.0), 10);
+    double specular = pow(clamp(dot(reflect(-finalLightDir, normalColor), vVec), 0.0, 100), 1);
 
-	finalcolor += vec4(color + vec3(specular, specular, specular)*0.1 + diffuseColor*0.1, 1.0);	
+	finalcolor += vec4(finalDiffuseColor + specular*0.1 + ambiant*0.1, 1.0);	
 
 	gl_FragColor = finalcolor;
 }

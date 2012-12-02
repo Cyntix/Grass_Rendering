@@ -21,17 +21,16 @@ void main()
             alphaValue = texture2D(alpha, gl_TexCoord[0].xy).x;
         }
     }
-	vec4 finalcolor = vec4(0.0);
-	
+	vec4 finalcolor = vec4(0.0);	
 	vec3 ambiant = diffuseColor;
     if(useTexture)
     {
         ambiant = texture2D(texture, gl_TexCoord[0].xy).xyz * ambiant;
     }
-    vec3 diffused = ambiant*lightcolor*max(0.0, dot(normal, lightDir));
+    vec3 diffused = ambiant*lightcolor*max(0.0, dot(normalize(normal), normalize(lightDir)));
 
 	//also add a small ambient term
-	finalcolor += vec4(diffused+ambiant*0.75, alphaValue);	
+	finalcolor += vec4(diffused*0.75+ambiant*1.25, alphaValue);	
 
     if(useColorVariation){
 	    gl_FragColor = vec4(pow(finalcolor.r, 1/gl_Color.r), pow(finalcolor.g, 1/gl_Color.g), pow(finalcolor.b, 1/gl_Color.b), finalcolor.a);

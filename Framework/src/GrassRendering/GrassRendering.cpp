@@ -62,11 +62,11 @@ init()
 	daysPerMiliSecond = 1 / 180.0;
 	totalDaysElapsed = 0;
 
-	m_light.origin() = Vector3(5000, 5000, 5000);
+	sunDirection = Vector3(5, 5, 5);
 	m_recSunlightInt = 1.0;
 	
-	m_SkyScale = 5000.0;
-	m_TerrainScale = 5000.0;
+	m_SkyScale = 10000;
+	m_TerrainScale = 10000;
 	m_GrassScale = 100;
 	m_PatternsScale = 500;
 	m_FlowerScale = 50;
@@ -670,6 +670,7 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 	m_meshShaderStencil.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
 	sh.setMatrix4x4Uniform("modelworld", (*mesh).getTransformation());	
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", (*mesh).getTransformation().Inverse().Transpose());
+	m_meshShaderStencil.setVector3Uniform("sunDirection", sunDirection.x, sunDirection.y, sunDirection.z);
 	m_meshShaderStencil.setFloatUniform("direction", direction);
 	sh.setIntUniform("useTransparency", m_showTransparency);
 	sh.setIntUniform("useAlphaToCoverage", m_showAlphaToCoverage);
@@ -790,11 +791,11 @@ void GrassRendering::draw_terrain(bool showTexture)
 
 	m_meshShaderDiffuse.setMatrix4x4Uniform("projection", m_camera.getProjectionMatrix());
 	m_meshShaderDiffuse.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
-	m_meshShaderDiffuse.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());
+	m_meshShaderDiffuse.setMatrix3x3Uniform("worldcameraNormal", m_camera.getTransformation().Transpose());	
+	m_meshShaderStencil.setVector3Uniform("sunDirection", sunDirection.x, sunDirection.y, sunDirection.z);
 	m_meshShaderDiffuse.setVector3Uniform("lightcolor", m_recSunlightInt, m_recSunlightInt, m_recSunlightInt);
 	m_meshShaderDiffuse.setMatrix4x4Uniform("modelworld", m_Terrain.getTransformation());
 	m_meshShaderDiffuse.setMatrix3x3Uniform("modelworldNormal", m_Terrain.getTransformation().Inverse().Transpose());
-	m_meshShaderDiffuse.setVector3Uniform("lightPosition", m_light.origin().x, m_light.origin().y, m_light.origin().z);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);

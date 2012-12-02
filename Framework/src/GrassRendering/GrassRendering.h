@@ -95,7 +95,7 @@ protected:
 	float direction;
 	boolean up;
 	// directional light
-	Light3D m_light;
+	Vector3 sunDirection;
 	float m_recSunlightInt;
 	
 	// mesh shader

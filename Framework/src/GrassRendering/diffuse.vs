@@ -3,7 +3,7 @@ uniform mat4 worldcamera;
 uniform mat4 projection;
 uniform mat3 worldcameraNormal;
 uniform mat3 modelworldNormal;
-uniform vec3 lightPosition;
+uniform vec3 sunDirection;
 
 varying vec3 normal, lightDir, eyeVec;
 
@@ -13,14 +13,11 @@ void main()
 	
 	normal = normalize( worldcameraNormal * modelworldNormal * gl_Normal );
 	
-	vec3 lightpositionCamera = vec3(worldcamera*vec4(lightPosition, 1.0));
+	vec3 lightpositionInCamera = vec3(worldcamera*vec4(sunDirection, 1.0));
 
-	lightDir = normalize(lightpositionCamera-vertex);
-	eyeVec = -vertex;
+	lightDir = normalize(-lightpositionInCamera);
+	eyeVec = normalize(-vertex);
 
-	// get texture coordinate
 	gl_TexCoord[0]  = gl_MultiTexCoord0;
-	// project the point into the camera
-	gl_Position = projection * vec4( vertex, 1.0 );
-	
+	gl_Position = projection * vec4( vertex, 1.0 );	
 }

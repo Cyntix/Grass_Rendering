@@ -40,8 +40,9 @@ init()
 	// set camera to look at world coordinate center
 	set_scene_pos(Vector3(0.0, 0.0, 0.0), 2.0);
 
-	direction = 0;
-	up = true;
+	wind_angle = 0;
+	wind_pattern_distance_x = 500;
+	wind_pattern_distance_z = 1000;
 
 	glGenBuffers(1, &vboGrass);
 	glGenBuffers(1, &vboFlowers);
@@ -59,16 +60,16 @@ init()
 	currentTime = 0.0;
 	isWatchOn = false;
 	
-	daysPerMiliSecond = 1 / 180.0;
-	totalDaysElapsed = 0;
+	timePerMiliSecond = 1 / 180.0;
+	totalTimeElapsed = 0;
 
 	sunDirection = Vector3(5, 5, 5);
 	m_recSunlightInt = 1.0;
 	
-	m_SkyScale = 5000;
-	m_TerrainScale = 5000;
-	m_GrassScale = 200;
-	m_PatternsScale = 1000;
+	m_SkyScale = 10000;
+	m_TerrainScale = 10000;
+	m_GrassScale = 150;
+	m_PatternsScale = 750;
 	m_FlowerScale = 100;
 }
 
@@ -183,7 +184,6 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	m_Pattern.translateWorld(starting_point);
 	int x_gone = 0;
 	do{
-		//cout<<"Creation of pattern on position: (" << m_Pattern.origin().x << ", " << m_Pattern.origin().y << ", " << m_Pattern.origin().z << ")...\n";
 		for(int i = 0; i<m_Pattern.getNumberOfVertices(); i++){
 			Vector3 pointIn3d = m_Pattern.getTransformation() * m_Pattern.getVertexPosition(i);
 			//1.Trouver le triangle dans lequel se trouve le point en 2D.
@@ -216,9 +216,6 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 					}
 				}
 			}
-			/*cout<<"Le point " << pointIn2d.x<< ", " << pointIn2d.y<< " a comme points proches \n" << terrain_uv_good_size.at(indicePoints[0]).x<< ", " << terrain_uv_good_size.at(indicePoints[0]).y<< "\n"
-				<< terrain_uv_good_size.at(indicePoints[1]).x<< ", " << terrain_uv_good_size.at(indicePoints[1]).y<< "\n"
-				<< terrain_uv_good_size.at(indicePoints[2]).x<< ", " << terrain_uv_good_size.at(indicePoints[2]).y<< "\n";*/
 
 			//2.Extrapoler le point en 3D avec les coordinnees barycentriques.
 			Vector2 p1 = terrain_uv_good_size.at(indicePoints[0]);
@@ -234,7 +231,6 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			float s2 = s2_area/triangle_area;
 			float s3 = s3_area/triangle_area;
 
-			//cout<<"triangle_area "<< triangle_area << "s1: " << s1_area << "rapport: " << s1 <<"\n";
 			//POINT FINAL A PUSHER
 			if(s1+s2+s3<=1){
 			Vector3 p1_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[0]);
@@ -351,7 +347,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			}
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
-			float arbitrarySize = densityColor * ((drand48() * scale) + scale);
+			float arbitrarySize = ((densityColor * drand48() * scale) + scale);
 			(*mesh).rotateObject(Vector3(0,1,0), arbitraryAngle);
 			(*mesh).scaleObject(Vector3(arbitrarySize, arbitrarySize, arbitrarySize));
 			//Vertices
@@ -482,13 +478,13 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 }
 
 void GrassRendering::load_grass(){
-	cout<<"Generation of grass:\n";
+	cout<<"Generation of grass...\n";
 	load_particles(&vboGrass, &grass_particles, &m_Grass, m_GrassScale, &vboGrassSize);
 	cout<<"\n\n";
 }
 
 void GrassRendering::load_flowers(){
-	cout<<"Generation of flowers:\n";
+	cout<<"Generation of flowers...\n";
 	m_PatternsScale *=5;
 	load_particles(&vboFlowers, &flowers_particles, &m_Flower, m_FlowerScale, &vboFlowersSize);
 	cout<<"\n\n";
@@ -590,14 +586,14 @@ special(int key, int x, int y)
 	switch (key)
 	{			
 		case GLUT_KEY_UP:
-			daysPerMiliSecond += 0.001;
-			if(daysPerMiliSecond > 0.1)
-				daysPerMiliSecond = 0.1;
+			timePerMiliSecond += 0.001;
+			if(timePerMiliSecond > 0.1)
+				timePerMiliSecond = 0.1;
 			break;
 		case GLUT_KEY_DOWN:
-			daysPerMiliSecond -= 0.001;
-			if(daysPerMiliSecond < 0.001)
-				daysPerMiliSecond = 0.001;
+			timePerMiliSecond -= 0.001;
+			if(timePerMiliSecond < 0.001)
+				timePerMiliSecond = 0.001;
 			break;
 		default:
 			TrackballViewer::special(key, x, y);
@@ -616,19 +612,11 @@ void GrassRendering::idle()
 	{
 		float prevTime = currentTime;
 		currentTime = watch.stop();
-		float daysElapsed = daysPerMiliSecond * (currentTime-prevTime);
-		totalDaysElapsed += daysElapsed;
+		float timeElapsed = timePerMiliSecond * (currentTime-prevTime);
+		totalTimeElapsed += timeElapsed/2;
 		
 		//INSERT ANIMATION
-		if(up){
-		direction += daysElapsed/25;
-		}else {
-			direction -= daysElapsed/25;
-		}
-		if(direction > 0.5 || direction < 0){
-			up = !up;
-		}
-		cout<<direction<<"\n";
+		wind_angle += timeElapsed/5;
 		glutPostRedisplay();
 	}
 }
@@ -654,14 +642,14 @@ draw_scene(DrawMode _draw_mode)
 }
 
 void GrassRendering::draw_grass(){
-	draw_buffer(m_meshShaderStencil, vboGrass, &m_Grass, &grass_particles, m_showTextureGrass, &vboGrassSize);
+	draw_buffer(m_meshShaderStencil, vboGrass, &m_Grass, &grass_particles, m_showTextureGrass, &vboGrassSize, m_GrassScale);
 }
 
 void GrassRendering::draw_flowers(){
-	draw_buffer(m_meshShaderStencil, vboFlowers, &m_Flower, &flowers_particles , m_showTextureFlowers, &vboFlowersSize);
+	draw_buffer(m_meshShaderStencil, vboFlowers, &m_Flower, &flowers_particles , m_showTextureFlowers, &vboFlowersSize, m_FlowerScale);
 }
 
-void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture, int* bufferSize){
+void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture, int* bufferSize, double billboardScale){
 	m_meshShaderStencil.bind();
 
 	m_meshShaderStencil.setMatrix4x4Uniform("worldcamera", m_camera.getTransformation().Inverse());
@@ -671,9 +659,12 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 	sh.setMatrix4x4Uniform("modelworld", (*mesh).getTransformation());	
 	m_meshShaderStencil.setMatrix3x3Uniform("modelworldNormal", (*mesh).getTransformation().Inverse().Transpose());
 	m_meshShaderStencil.setVector3Uniform("sunDirection", sunDirection.x, sunDirection.y, sunDirection.z);
-	m_meshShaderStencil.setFloatUniform("direction", direction);
 	sh.setIntUniform("useTransparency", m_showTransparency);
 	sh.setIntUniform("useAlphaToCoverage", m_showAlphaToCoverage);
+	sh.setFloatUniform("wind_angle", wind_angle);
+	sh.setFloatUniform("wind_pattern_distance_x", wind_pattern_distance_x);
+	sh.setFloatUniform("wind_pattern_distance_z", wind_pattern_distance_z);
+	sh.setFloatUniform("billboard_scale", billboardScale);
 
 	if(m_showGrass){
 		if(m_showTransparency && m_showAlphaToCoverage){

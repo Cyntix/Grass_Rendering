@@ -63,7 +63,7 @@ protected:
 
 	virtual void draw_scene(DrawMode _draw_mode);
 
-	void draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture, int* bufferSize);
+	void draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Vector3>* particles, boolean showTexture, int* bufferSize, double billboardScale);
 	void draw_grass();
 	void draw_flowers();
     void draw_sky();
@@ -92,8 +92,9 @@ protected:
 	int vboFlowersSize;
 
 	//animation
-	float direction;
-	boolean up;
+	float wind_angle;
+	float wind_pattern_distance_x;
+	float wind_pattern_distance_z;
 	// directional light
 	Vector3 sunDirection;
 	float m_recSunlightInt;
@@ -125,8 +126,8 @@ protected:
 	StopWatch watch;
 	bool isWatchOn;
 	
-	float daysPerMiliSecond;
-	float totalDaysElapsed;
+	float timePerMiliSecond;
+	float totalTimeElapsed;
 	float currentTime;
 };
 

@@ -33,7 +33,7 @@ void main()
 	finalcolor += vec4(diffused*0.75+ambiant*1.25, alphaValue);	
 
     if(useColorVariation){
-	    gl_FragColor = vec4(pow(finalcolor.r, 1/gl_Color.r), pow(finalcolor.g, 1/gl_Color.g), pow(finalcolor.b, 1/gl_Color.b), finalcolor.a);
+	    gl_FragColor = vec4(pow(finalcolor.r, 1/gl_Color.r), pow(finalcolor.g, 1/gl_Color.g), pow(finalcolor.b, 1/gl_Color.b), finalcolor.a * gl_Color.a);
     }else{
         gl_FragColor = finalcolor;
     }

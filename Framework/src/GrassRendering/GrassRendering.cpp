@@ -65,11 +65,11 @@ init()
 	sunDirection = Vector3(5, 5, 5);
 	m_recSunlightInt = 1.0;
 	
-	m_SkyScale = 10000;
-	m_TerrainScale = 10000;
-	m_GrassScale = 100;
-	m_PatternsScale = 500;
-	m_FlowerScale = 50;
+	m_SkyScale = 5000;
+	m_TerrainScale = 5000;
+	m_GrassScale = 200;
+	m_PatternsScale = 1000;
+	m_FlowerScale = 100;
 }
 
 
@@ -183,7 +183,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	m_Pattern.translateWorld(starting_point);
 	int x_gone = 0;
 	do{
-		cout<<"Creation of pattern on position: (" << m_Pattern.origin().x << ", " << m_Pattern.origin().y << ", " << m_Pattern.origin().z << ")...\n";
+		//cout<<"Creation of pattern on position: (" << m_Pattern.origin().x << ", " << m_Pattern.origin().y << ", " << m_Pattern.origin().z << ")...\n";
 		for(int i = 0; i<m_Pattern.getNumberOfVertices(); i++){
 			Vector3 pointIn3d = m_Pattern.getTransformation() * m_Pattern.getVertexPosition(i);
 			//1.Trouver le triangle dans lequel se trouve le point en 2D.
@@ -351,7 +351,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			}
 
 			float arbitraryAngle = drand48() * 2 * M_PI;
-			float arbitrarySize = (drand48() * scale/2) + scale;
+			float arbitrarySize = densityColor * ((drand48() * scale) + scale);
 			(*mesh).rotateObject(Vector3(0,1,0), arbitraryAngle);
 			(*mesh).scaleObject(Vector3(arbitrarySize, arbitrarySize, arbitrarySize));
 			//Vertices
@@ -467,7 +467,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 				colorData[k*4] = colorVariation;
 				colorData[k*4 + 1] = colorVariation;
 				colorData[k*4 + 2] = colorVariation;
-				colorData[k*4 + 3] = 1;
+				colorData[k*4 + 3] = densityColor;
 			}
 
 			glBufferSubData(GL_ARRAY_BUFFER, i*2*6*3*sizeof(double), 2*6*3*sizeof(double), data);

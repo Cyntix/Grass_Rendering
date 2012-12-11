@@ -68,9 +68,9 @@ init()
 	
 	m_SkyScale = 10000;
 	m_TerrainScale = 10000;
-	m_GrassScale = 150;
-	m_PatternsScale = 750;
-	m_FlowerScale = 100;
+	m_GrassScale = 200;
+	m_PatternsScale = 1000;
+	m_FlowerScale = 125;
 }
 
 
@@ -186,7 +186,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 	do{
 		for(int i = 0; i<m_Pattern.getNumberOfVertices(); i++){
 			Vector3 pointIn3d = m_Pattern.getTransformation() * m_Pattern.getVertexPosition(i);
-			//1.Trouver le triangle dans lequel se trouve le point en 2D.
+			//1.Find the nearest 2D triangle on the terrain.
 			Vector2 pointIn2d = Vector2(pointIn3d.x, pointIn3d.z);
 
 			unsigned int indicePoints[3] = {-1, -1, -1};
@@ -217,7 +217,7 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 				}
 			}
 
-			//2.Extrapoler le point en 3D avec les coordinnees barycentriques.
+			//2.Interpolate the point in 3D with the barycentric coordinates.
 			Vector2 p1 = terrain_uv_good_size.at(indicePoints[0]);
 			Vector2 p2 = terrain_uv_good_size.at(indicePoints[1]);
 			Vector2 p3 = terrain_uv_good_size.at(indicePoints[2]);
@@ -231,7 +231,6 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			float s2 = s2_area/triangle_area;
 			float s3 = s3_area/triangle_area;
 
-			//POINT FINAL A PUSHER
 			if(s1+s2+s3<=1){
 			Vector3 p1_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[0]);
 			Vector3 p2_3D = m_Terrain.getTransformation() * m_Terrain.getVertexPosition(indicePoints[1]);
@@ -240,8 +239,6 @@ void GrassRendering::load_particles(GLuint* vbo, vector<Vector3>* particles, Mes
 			Vector3 interpolatedPoint = s1*p1_3D + s2*p2_3D + s3*p3_3D;
 			(*particles).push_back(interpolatedPoint);
 			}
-			//Version de base:
-			//(*particles).push_back(pointIn3d);
 		}
 		if(m_Pattern.origin().x<=m_TerrainScale){			
 			m_Pattern.translateWorld(Vector3(m_PatternsScale, 0, 0));
@@ -739,7 +736,6 @@ void GrassRendering::draw_buffer(Shader& sh, GLuint vbo, Mesh3D* mesh, vector<Ve
 	m_meshShaderStencil.unbind();
 }
 
-//SKY
 void GrassRendering::draw_sky()
 {
 	m_meshShaderTexture.bind();
@@ -775,7 +771,6 @@ void GrassRendering::draw_sky()
 	m_meshShaderTexture.unbind();	
 }
 
-//TERRAIN
 void GrassRendering::draw_terrain(bool showTexture)
 {
 	m_meshShaderDiffuse.bind();

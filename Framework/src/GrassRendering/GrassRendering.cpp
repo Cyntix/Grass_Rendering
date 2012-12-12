@@ -16,8 +16,8 @@
 #include <stdio.h>
 #define drand48() (double)rand()/RAND_MAX
 #define BUFFER_OFFSET(i) ((void*)(i))
-//== IMPLEMENTATION ========================================================== 
 
+//== IMPLEMENTATION ========================================================== 
 
 GrassRendering::
 GrassRendering(const char* _title, int _width, int _height)
@@ -68,9 +68,9 @@ init()
 	
 	m_SkyScale = 10000;
 	m_TerrainScale = 10000;
-	m_GrassScale = 200;
+	m_GrassScale = 150;
 	m_PatternsScale = 1000;
-	m_FlowerScale = 125;
+	m_FlowerScale = 100;
 }
 
 
@@ -564,6 +564,11 @@ keyboard(int key, int x, int y)
 			}
 
 			isWatchOn = !isWatchOn;
+			break;
+		case 'h':
+			cout<<"HELP:\nPress 'g' to enable or disable the grass appearance\nPress 't' to enable or disable the use of textures"
+				<<"\nPress 'z' to enable or disable the transparency\nPress 'a' to enable or disable the alpha to coverage"
+				<<"\nPress 'c' to enable or disable the color variation";
 			break;
 		default:
 			TrackballViewer::special(key, x, y);

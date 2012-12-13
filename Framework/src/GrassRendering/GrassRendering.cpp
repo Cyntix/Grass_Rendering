@@ -566,9 +566,9 @@ keyboard(int key, int x, int y)
 			isWatchOn = !isWatchOn;
 			break;
 		case 'h':
-			cout<<"HELP:\nPress 'g' to enable or disable the grass appearance\nPress 't' to enable or disable the use of textures"
+			cout<<"HELP:\nPress 'g' to enable or disable the grass presence\nPress 't' to enable or disable the use of textures"
 				<<"\nPress 'z' to enable or disable the transparency\nPress 'a' to enable or disable the alpha to coverage"
-				<<"\nPress 'c' to enable or disable the color variation";
+				<<"\nPress 'c' to enable or disable the color variation\nPress 'h' to show the help once again";
 			break;
 		default:
 			TrackballViewer::special(key, x, y);

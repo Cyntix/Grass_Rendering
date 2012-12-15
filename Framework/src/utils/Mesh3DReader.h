@@ -125,7 +125,9 @@ private:
 				#endif
 				_materialsManager.materials.back()->m_diffuseTexture.create(texturePath);
 			}
-			else if(word == "map_nm")
+
+			//WE ADDED ALL THOSE FUNCTIONNALITIES INT ORDER TO IMPORT ADDITIONNAL TEXTURES
+			else if(word == "map_nm") //normal map
 			{
 				std::string texturePath;
 				lineStream >> texturePath;
@@ -137,7 +139,7 @@ private:
 				_materialsManager.materials.back()->m_normal_mapTexture.create(texturePath);
 				_materialsManager.materials.back()->m_normal_mapTexture.setLayer(1);
 			}
-			else if(word == "map_alpha")
+			else if(word == "map_alpha") //alpha texture
 			{
 				std::string texturePath;
 				lineStream >> texturePath;
@@ -148,7 +150,7 @@ private:
 				#endif
 				_materialsManager.materials.back()->m_alphaTexture.create(texturePath);
 				_materialsManager.materials.back()->m_alphaTexture.setLayer(2);
-			}else if(word == "map_density")
+			}else if(word == "map_density") //density texture
 			{
 				std::string texturePath;
 				lineStream >> texturePath;
@@ -159,7 +161,7 @@ private:
 				#endif
 				_materialsManager.materials.back()->m_density.create(texturePath);
 				_materialsManager.materials.back()->m_density.setLayer(3);
-			}else if(word == "map_color_variation")
+			}else if(word == "map_color_variation") //colorVariation texture
 			{
 				std::string texturePath;
 				lineStream >> texturePath;

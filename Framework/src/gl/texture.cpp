@@ -192,6 +192,7 @@ void Texture::clear()
 }
 ///////////////////////////////////////////////////////////////////////////
 
+//We added this function to read the diffuse and colorVariation textures
 GLubyte * Texture::getData(){
 	assert(id_!=0);
 	GLubyte * data = new GLubyte [width_*height_*3];
